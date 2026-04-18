@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0e2d6; font-family: sans-serif; }
+        canvas { border: 5px solid #6d4c41; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+<script>
+let score = 0;
+let item; 
+let itemX, itemY;
+let isDragging = false;
+let currentItemType = ""; // "pancake" or "milkshake"
+let bunnyScale = 1.0;
+let kittyScale = 1.0;
+let gameState = "PLAY"; // PLAY or GAMEOVER
+
+function setup() {
+  createCanvas(800, 450);
+  spawnItem();
+}
+
+function draw() {
+  background("#fdf5e6");
+  
+  // UI - Score
+  fill(109, 76, 65);
+  textSize(24);
+  textAlign(CENTER);
+  text("Score: " + score, width / 2, 40);
+
+  if (gameState === "PLAY") {
+    // 1. Draw Bunny (Left)
+    drawBunny(150, 300, bunnyScale);
+    
+    // 2. Draw Kitty (Right)
+    drawKitty(650, 300, kittyScale);
+    
+    // 3. Draw Active Food Item
+    if (isDragging) {
+      itemX = mouseX;
+      itemY = mouseY;
+    }
+    drawFood(itemX, itemY, currentItemType);
+    
+  } else {
+    // GAME OVER SCREEN
+    fill(255, 0, 0);
+    textSize(50);
+    text("GAME OVER!", width / 2, height / 2);
+    textSize(20);
+    text("Click to Restart", width / 2, height / 2 + 50);
+  }
+}
+
+function spawnItem() {
+  itemX = width / 2;
+  itemY = height / 2 + 50;
+  currentItemType = random(["pancake", "milkshake"]);
+}
+
+function mousePressed() {
+  if (gameState === "GAMEOVER") {
+    resetGame();
+    return;
+  }
+  // Check if clicking near the center item
+  if (dist(mouseX, mouseY, itemX, itemY) < 60) {
+    isDragging = true;
+  }
+}
+
+function mouseReleased() {
+  if (!isDragging) return;
+  isDragging = false;
+
+  // Logic: Was it sorted correctly?
+  if (itemX < 250) { // Dropped on Bunny side
+    if (currentItemType === "pancake") {
+      score++;
+      bunnyScale += 0.05;
+      spawnItem();
+    } else {
+      gameState = "GAMEOVER";
+    }
+  } else if (itemX > 550) { // Dropped on Kitty side
+    if (currentItemType === "milkshake") {
+      score++;
+      kittyScale += 0.05;
+      spawnItem();
+    } else {
+      gameState = "GAMEOVER";
+    }
+  } else {
+    // Return to center if not dropped far enough
+    itemX = width / 2;
+    itemY = height / 2 + 50;
+  }
+}
+
+function resetGame() {
+  score = 0;
+  bunnyScale = 1.0;
+  kittyScale = 1.0;
+  gameState = "PLAY";
+  spawnItem();
+}
+
+// --- Drawing Simple Shapes for Assets ---
+
+function drawBunny(x, y, s) {
+  push();
+  translate(x, y);
+  scale(s);
+  fill(255); stroke(0);
+  ellipse(0, 0, 100, 120); // Body
+  ellipse(-20, -60, 20, 60); // Ear L
+  ellipse(20, -60, 20, 60); // Ear R
+  fill(0);
+  ellipse(-15, -10, 8, 8); // Beady Eye L
+  ellipse(15, -10, 8, 8); // Beady Eye R
+  noFill();
+  arc(0, 5, 10, 10, 0, PI); // Mouth
+  pop();
+}
+
+function drawKitty(x, y, s) {
+  push();
+  translate(x, y);
+  scale(s);
+  fill(200); stroke(0);
+  ellipse(0, 0, 110, 100); // Body
+  triangle(-40, -40, -20, -45, -45, -20); // Ear L
+  triangle(40, -40, 20, -45, 45, -20); // Ear R
+  fill(0);
+  ellipse(-20, -5, 8, 8); // Beady Eye L
+  ellipse(20, -5, 8, 8); // Beady Eye R
+  line(-5, 5, 5, 5); // Mouth
+  pop();
+}
+
+function drawFood(x, y, type) {
+  push();
+  translate(x, y);
+  if (type === "pancake") {
+    fill(244, 208, 63); stroke(184, 134, 11);
+    ellipse(0, 0, 60, 20); // Bottom
+    ellipse(0, -5, 60, 20); // Middle
+    ellipse(0, -10, 60, 20); // Top
+    fill(255, 255, 0); rect(-5, -18, 10, 8); // Butter
+  } else {
+    fill(255, 182, 193); stroke(0);
+    rect(-15, -30, 30, 50, 5); // Cup
+    stroke(255, 0, 0); strokeWeight(3);
+    line(5, -30, 10, -45); // Straw
+  }
+  pop();
+}
+</script>
+</body>
+</html>
