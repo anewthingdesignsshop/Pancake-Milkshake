@@ -17,23 +17,33 @@
 </head>
 <body>
 <script>
-let score = 0, itemX, itemY, startY;
-let currentItem = "", isDragging = false;
-let bunnySize = 130, kittySize = 130;
-let gameState = "PLAY", particles = [];
+/** * GAME VARIABLES
+ */
+let score = 0;
+let itemX, itemY, startY;
+let currentItem = "";
+let isDragging = false;
+let bunnySize = 120;
+let kittySize = 120;
+let gameState = "PLAY"; 
+let particles = [];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  startY = height * 0.6;
+  startY = height * 0.6; 
   spawnItem();
 }
 
 function draw() {
   background("#fdf5e6");
   
-  // Table
-  noStroke(); fill("#e0c9a6"); rect(0, startY + 45, width, height - startY);
-  stroke("#d7ccc8"); strokeWeight(4); line(0, startY + 45, width, startY + 45);
+  // 1. Draw Table/Environment
+  noStroke();
+  fill("#e0c9a6"); 
+  rect(0, startY + 45, width, height - startY);
+  stroke("#d7ccc8"); 
+  strokeWeight(4); 
+  line(0, startY + 45, width, startY + 45);
 
   if (gameState === "PLAY") {
     displayGame();
@@ -43,90 +53,95 @@ function draw() {
 }
 
 function displayGame() {
-  fill("#6d4c41"); noStroke(); textAlign(CENTER); textSize(width * 0.12);
+  // Score UI - Scaled to screen width
+  fill("#6d4c41"); noStroke(); textAlign(CENTER); textSize(width * 0.1);
   text(score, width / 2, height * 0.15);
 
-  if (isDragging) { itemX = mouseX; itemY = mouseY; }
+  // Dragging logic
+  if (isDragging) {
+    itemX = mouseX;
+    itemY = mouseY;
+  }
 
-  // Draw Bunny
-  drawChibiBunny(width * 0.22, startY, bunnySize, (isDragging && itemX < width * 0.45));
+  // Hunger Check
+  let bunnyHungry = (isDragging && itemX < width * 0.45);
+  let kittyHungry = (isDragging && itemX > width * 0.55);
 
-  // Draw Kitty (Updated to match your image)
-  drawChibiKitty(width * 0.78, startY, kittySize, (isDragging && itemX > width * 0.55));
+  // Characters - Positions are relative to width so they move on rotation
+  drawChibiBunny(width * 0.2, startY, bunnySize, bunnyHungry);
+  drawChibiKitty(width * 0.8, startY, kittySize, kittyHungry);
 
+  // Food Item
   drawFood(itemX, itemY, currentItem);
 }
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
-  if (s > 320) translate(random(-2, 2), random(-2, 2));
+  if (s > 300) translate(random(-2, 2), random(-2, 2)); 
   translate(x, y);
-  fill(255); stroke(100, 50, 50); strokeWeight(3);
-  ellipse(-s/4, -s/1.5, s/3.5, s/1.2); ellipse(s/4, -s/1.5, s/3.5, s/1.2); // Ears
-  ellipse(0, 0, s, s * 1.1); // Body
+  
+  fill(255); stroke(0); strokeWeight(3);
+  ellipse(-s/4, -s/1.5, s/4, s/1.5); 
+  ellipse(s/4, -s/1.5, s/4, s/1.5);
+  ellipse(0, 0, s, s * 1.1);
   
   let dx = map(itemX, 0, width, -s/20, s/20);
   let dy = map(itemY, 0, height, -s/30, s/30);
-  fill(40); noStroke(); ellipse(-s/4 + dx, -s/10 + dy, s/9, s/7); ellipse(s/4 + dx, -s/10 + dy, s/9, s/7);
+  fill(0); noStroke();
+  ellipse(-s/4 + dx, -s/10 + dy, s/10, s/8); 
+  ellipse(s/4 + dx, -s/10 + dy, s/10, s/8);
   
-  if (isOpen) { fill(80, 40, 40); stroke(0); ellipse(0, s/6, s/3.5, s/2.5); }
-  else { noFill(); stroke(100, 50, 50); arc(0, s/8, s/5, s/10, 0, PI); }
+  if (isOpen) {
+    fill("#5d4037"); stroke(0);
+    ellipse(0, s/6, s/3.5, s/2.5);
+  } else {
+    noFill(); stroke(0);
+    arc(0, s/8, s/5, s/10, 0, PI);
+  }
   pop();
 }
 
 function drawChibiKitty(x, y, s, isOpen) {
   push();
-  if (s > 320) translate(random(-2, 2), random(-2, 2));
+  if (s > 300) translate(random(-2, 2), random(-2, 2));
   translate(x, y);
   
-  // Body (Grey with stripes)
-  stroke(80); strokeWeight(3); fill(220);
+  fill(220); stroke(0); strokeWeight(3);
+  triangle(-s/2, -s/3, -s/4, -s/2, -s/8, -s/3);
+  triangle(s/2, -s/3, s/4, -s/2, s/8, -s/3);
   ellipse(0, 0, s * 1.1, s);
   
-  // Stripes (Darker grey)
-  fill(100); noStroke();
-  rect(-s/10, -s/2, s/5, s/6, 5); // Center stripe
-  rect(-s/3, -s/2.5, s/6, s/8, 5); // Left stripe
-  rect(s/6, -s/2.5, s/6, s/8, 5); // Right stripe
-
-  // Ears
-  stroke(80); fill(220);
-  triangle(-s/2.2, -s/3, -s/3, -s/1.8, -s/6, -s/3);
-  triangle(s/2.2, -s/3, s/3, -s/1.8, s/6, -s/3);
-  fill(255, 192, 203); noStroke(); // Pink inner ear
-  triangle(-s/2.5, -s/3.2, -s/3, -s/2.1, -s/5, -s/3.2);
-  triangle(s/2.5, -s/3.2, s/3, -s/2.1, s/5, -s/3.2);
-
-  // Bib (Yellow with milk carton)
-  fill(255, 235, 150); stroke(80);
-  arc(0, s/4, s/1.8, s/2, 0, PI);
-  fill(255); rect(-s/20, s/3, s/10, s/8); // Milk carton bib icon
-
-  // Face
   let dx = map(itemX, 0, width, -s/20, s/20);
   let dy = map(itemY, 0, height, -s/30, s/30);
-  fill(40); noStroke();
-  ellipse(-s/4 + dx, 0 + dy, s/9, s/7); ellipse(s/4 + dx, 0 + dy, s/9, s/7);
+  fill(0); noStroke();
+  ellipse(-s/4 + dx, 0 + dy, s/10, s/8); 
+  ellipse(s/4 + dx, 0 + dy, s/10, s/8);
   
-  if (isOpen) { fill(80, 40, 40); stroke(0); ellipse(0, s/6, s/2.5, s/3.5); }
-  else { stroke(80); line(-s/10, s/8, s/10, s/8); }
+  if (isOpen) {
+    fill("#5d4037"); stroke(0);
+    ellipse(0, s/6, s/2.5, s/3.5);
+  } else {
+    stroke(0); line(-s/10, s/8, s/10, s/8);
+  }
   pop();
 }
 
 function drawFood(x, y, type) {
-  push(); translate(x, y);
+  push();
+  translate(x, y);
   if (type === "pancake") {
-    fill(245); noStroke(); ellipse(0, 15, 85, 25); // Plate
-    fill("#f4d03f"); stroke("#b8860b");
-    for(let i=0; i<3; i++) ellipse(0, i*5, 70, 22);
-    fill("#d35400"); noStroke(); ellipse(0, -5, 45, 12); // Syrup
-    fill("#ffeb3b"); stroke("#ffd700"); rect(-8, -18, 16, 10, 2); // Butter
+    fill(240); noStroke(); ellipse(0, 15, 80, 25);
+    fill("#f4d03f"); stroke(139, 69, 19, 100);
+    for(let i=0; i<3; i++) ellipse(0, i*4, 65, 20);
+    fill("#d35400"); noStroke(); ellipse(0, -5, 40, 10);
+    fill("#ffeb3b"); stroke(255, 200, 0); rect(-8, -16, 16, 10, 2);
   } else {
-    fill(255, 255, 255, 200); stroke(255); rect(-20, -40, 40, 75, 5); // Glass
-    noStroke(); fill("#ffb6c1"); rect(-17, -35, 34, 65, 3); // Shake
-    fill(255); ellipse(0, -40, 45, 25); // Foam
-    fill("#e74c3c"); ellipse(0, -55, 14, 14); // Cherry
-    stroke("#e74c3c"); strokeWeight(4); line(8, -40, 15, -65); // Straw
+    fill(255, 255, 255, 180); stroke(255);
+    rect(-20, -40, 40, 70, 5);
+    noStroke(); fill("#ffb6c1"); rect(-17, -35, 34, 60, 3);
+    fill(255); ellipse(0, -40, 40, 20);
+    fill("#e74c3c"); ellipse(0, -50, 12, 12);
+    stroke("#e74c3c"); strokeWeight(4); line(8, -40, 15, -60);
   }
   pop();
 }
@@ -140,46 +155,77 @@ function touchStarted() {
 function touchEnded() {
   if (!isDragging) return false;
   isDragging = false;
+
   if (itemX < width * 0.35) {
-    if (currentItem === "pancake") { score++; bunnySize += 30; spawnItem(); }
+    if (currentItem === "pancake") { score++; bunnySize += 35; spawnItem(); }
     else { triggerPop("Bunny"); }
-  } else if (itemX > width * 0.65) {
-    if (currentItem === "milkshake") { score++; kittySize += 30; spawnItem(); }
+  } 
+  else if (itemX > width * 0.65) {
+    if (currentItem === "milkshake") { score++; kittySize += 35; spawnItem(); }
     else { triggerPop("Kitty"); }
-  } else { itemX = width / 2; itemY = startY; }
-  if (bunnySize > 480 || kittySize > 480) triggerPop(bunnySize > 480 ? "Bunny" : "Kitty");
+  } 
+  else { 
+    itemX = width / 2; itemY = startY; 
+  }
+
+  if (bunnySize > 450 || kittySize > 450) triggerPop(bunnySize > 450 ? "Bunny" : "Kitty");
   return false;
+}
+
+function mousePressed() { touchStarted(); }
+function mouseReleased() { touchEnded(); }
+
+function spawnItem() {
+  itemX = width / 2;
+  itemY = startY;
+  currentItem = random(["pancake", "milkshake"]);
 }
 
 function triggerPop(who) {
   gameState = "POP";
   let col = (who === "Bunny") ? "#f4d03f" : "#ffb6c1";
-  let px = (who === "Bunny") ? width * 0.22 : width * 0.78;
+  let px = (who === "Bunny") ? width * 0.2 : width * 0.8;
   for (let i = 0; i < 80; i++) particles.push(new Particle(px, startY, col));
 }
 
 function displayExplosion() {
   for (let i = particles.length - 1; i >= 0; i--) {
-    particles[i].update(); particles[i].display();
+    particles[i].update();
+    particles[i].display();
     if (particles[i].size < 0.1) particles.splice(i, 1);
   }
-  fill(255, 50, 50); textAlign(CENTER); textSize(width * 0.15); text("BOOM!", width / 2, height / 2);
-  fill("#6d4c41"); textSize(22); text("Score: " + score + "\nTap to restart", width/2, height/2 + 90);
+  fill(255, 50, 50); textAlign(CENTER); textSize(width * 0.15);
+  text("BOOM!", width / 2, height / 2);
+  fill("#6d4c41"); textSize(20);
+  text("Final Score: " + score + "\nTap to restart", width/2, height/2 + 80);
 }
 
-function spawnItem() { itemX = width / 2; itemY = startY; currentItem = random(["pancake", "milkshake"]); }
-function resetGame() { score = 0; bunnySize = 130; kittySize = 130; particles = []; gameState = "PLAY"; spawnItem(); }
-function windowResized() { resizeCanvas(windowWidth, windowHeight); startY = height * 0.6; }
-function mousePressed() { touchStarted(); }
-function mouseReleased() { touchEnded(); }
+function resetGame() {
+  score = 0; bunnySize = 120; kittySize = 120; particles = [];
+  gameState = "PLAY"; spawnItem();
+}
+
+/** * ROTATION FIX: 
+ * Ensures item stays centered when rotating screen
+ */
+function windowResized() { 
+  resizeCanvas(windowWidth, windowHeight); 
+  startY = height * 0.6; 
+  
+  // If we aren't dragging, reposition the item to the new center
+  if (!isDragging) {
+    itemX = width / 2;
+    itemY = startY;
+  }
+}
 
 class Particle {
   constructor(x, y, col) {
     this.x = x; this.y = y; this.col = col;
-    this.vx = random(-18, 18); this.vy = random(-22, 5);
-    this.gravity = 0.6; this.size = random(10, 35);
+    this.vx = random(-15, 15); this.vy = random(-20, 5);
+    this.gravity = 0.6; this.size = random(10, 30);
   }
-  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
+  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.96; }
   display() { fill(this.col); noStroke(); ellipse(this.x, this.y, this.size); }
 }
 </script>
