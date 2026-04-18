@@ -3,142 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Milkshake Deluxe</title>
+    <title>Pancake Milkshake</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #222; touch-action: none; }
+        body { margin: 0; overflow: hidden; background: #fdf5e6; touch-action: none; }
         canvas { display: block; }
     </style>
 </head>
 <body>
 <script>
-let bunnyImg, kittyImg, pancakeImg, shakeImg;
 let score = 0;
-let itemX, itemY;
+let itemX, itemY, startY;
 let currentItem = "";
 let isDragging = false;
-let bunnySize = 150;
-let kittySize = 150;
+let bunnySize = 120;
+let kittySize = 120;
 let gameState = "PLAY";
-
-// --- REPLACE THESE WITH YOUR IMAGE LINKS ---
-const BUNNY_URL = 'https://i.imgur.com/your-bunny-idle.png';
-const KITTY_URL = 'https://i.imgur.com/your-kitty-idle.png';
-const PANCAKE_URL = 'https://i.imgur.com/your-pancake.png';
-const SHAKE_URL = 'https://i.imgur.com/your-shake.png';
-
-function preload() {
-  // If you don't have links yet, the game uses high-res placeholders
-  bunnyImg = loadImage(BUNNY_URL, img => img, err => bunnyImg = null);
-  kittyImg = loadImage(KITTY_URL, img => img, err => kittyImg = null);
-  pancakeImg = loadImage(PANCAKE_URL, img => img, err => pancakeImg = null);
-  shakeImg = loadImage(SHAKE_URL, img => img, err => shakeImg = null);
-}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  startY = height * 0.6; // The "Line" everything sits on
   spawnItem();
-  imageMode(CENTER);
 }
 
 function draw() {
   background("#fdf5e6");
   
-  // Table Top
-  fill("#e0c9a6"); noStroke();
-  rect(0, height * 0.6, width, height * 0.4);
+  // Table Line
+  stroke("#d7ccc8"); strokeWeight(4);
+  line(0, startY + 50, width, startY + 50);
 
   if (gameState === "PLAY") {
     displayGame();
-  } else if (gameState === "POP") {
-    displayExplosion();
+  } else {
+    drawGameOver();
   }
 }
 
 function displayGame() {
-  // Score
-  fill("#6d4c41"); textSize(40); textAlign(CENTER);
-  text("Score: " + score, width/2, 60);
+  // Score UI
+  fill("#6d4c41"); noStroke(); textAlign(CENTER); textSize(40);
+  text(score, width / 2, 80);
 
-  // Dragging logic
   if (isDragging) {
-    itemX = lerp(itemX, mouseX, 0.3);
-    itemY = lerp(itemY, mouseY, 0.3);
+    itemX = mouseX;
+    itemY = mouseY;
   }
 
-  // Draw Bunny
-  let bunnyBounce = (itemX < width/2 && isDragging) ? 1.2 : 1.0; 
-  drawCharacter(bunnyImg, width * 0.2, height * 0.6, bunnySize * bunnyBounce, "Bunny");
+  // Determine if characters should open their mouths
+  let bunnyHungry = (isDragging && itemX < width * 0.45);
+  let kittyHungry = (isDragging && itemX > width * 0.55);
 
-  // Draw Kitty
-  let kittyBounce = (itemX > width/2 && isDragging) ? 1.2 : 1.0;
-  drawCharacter(kittyImg, width * 0.8, height * 0.6, kittySize * kittyBounce, "Kitty");
+  // Draw Bunny (Left)
+  drawChibiBunny(width * 0.2, startY, bunnySize, bunnyHungry);
 
-  // Draw Food
-  drawFoodItem(itemX, itemY, currentItem);
+  // Draw Kitty (Right)
+  drawChibiKitty(width * 0.8, startY, kittySize, kittyHungry);
+
+  // Draw Central Food Item
+  drawFood(itemX, itemY, currentItem);
+}
+
+function drawChibiBunny(x, y, s, isOpen) {
+  push();
+  // Shake effect if close to popping
+  if (s > 300) translate(random(-2, 2), random(-2, 2));
+  translate(x, y);
   
-  // Check for "Explosion" size
-  if (bunnySize > 400 || kittySize > 400) gameState = "POP";
-}
-
-function drawCharacter(img, x, y, size, type) {
-  if (img) {
-    image(img, x, y, size, size);
+  // Ears & Body
+  fill(255); stroke(0); strokeWeight(3);
+  ellipse(-20, -s/1.5, s/4, s/1.5); ellipse(20, -s/1.5, s/4, s/1.5);
+  ellipse(0, 0, s, s * 1.1);
+  
+  // Beady Eyes
+  fill(0); noStroke();
+  ellipse(-s/4, -s/10, s/10, s/8); ellipse(s/4, -s/10, s/10, s/8);
+  
+  // Mouth Logic
+  stroke(0); noFill();
+  if (isOpen) {
+    fill(0); ellipse(0, s/6, s/4, s/3); // WIDE OPEN
   } else {
-    // Better placeholder art if image fails
-    fill(type === "Bunny" ? 255 : 200);
-    stroke(0); strokeWeight(3);
-    ellipse(x, y, size, size);
-    fill(0); ellipse(x-size/4, y-10, 10, 10); ellipse(x+size/4, y-10, 10, 10);
+    arc(0, s/8, s/5, s/10, 0, PI); // Small smile
   }
+  pop();
 }
 
-function drawFoodItem(x, y, type) {
-  if (type === "pancake" && pancakeImg) image(pancakeImg, x, y, 100, 60);
-  else if (type === "milkshake" && shakeImg) image(shakeImg, x, y, 70, 100);
-  else {
-    fill(type === "pancake" ? "orange" : "pink");
-    rect(x-40, y-25, 80, 50, 10);
+function drawChibiKitty(x, y, s, isOpen) {
+  push();
+  if (s > 300) translate(random(-2, 2), random(-2, 2));
+  translate(x, y);
+  
+  // Ears & Body
+  fill(200); stroke(0); strokeWeight(3);
+  triangle(-s/2, -s/3, -s/4, -s/2, -s/8, -s/3);
+  triangle(s/2, -s/3, s/4, -s/2, s/8, -s/3);
+  ellipse(0, 0, s * 1.1, s);
+  
+  // Beady Eyes
+  fill(0); noStroke();
+  ellipse(-s/4, 0, s/10, s/8); ellipse(s/4, 0, s/10, s/8);
+  
+  // Mouth Logic
+  stroke(0); noFill();
+  if (isOpen) {
+    fill(0); ellipse(0, s/6, s/3, s/4); // WIDE OPEN
+  } else {
+    line(-s/10, s/8, s/10, s/8); // Small line
   }
+  pop();
+}
+
+function drawFood(x, y, type) {
+  push();
+  translate(x, y);
+  if (type === "pancake") {
+    fill("#f4d03f"); stroke(0);
+    for(let i=0; i<3; i++) ellipse(0, i*5, 60, 20);
+    fill("#ffeb3b"); rect(-8, -15, 16, 10);
+  } else {
+    fill("#ffb6c1"); stroke(0);
+    rect(-15, -30, 30, 50, 5);
+    stroke(255, 0, 0); line(5, -30, 10, -45);
+  }
+  pop();
 }
 
 function touchStarted() {
-  if (gameState !== "PLAY") { resetGame(); return; }
+  if (gameState === "POP") { resetGame(); return false; }
   if (dist(mouseX, mouseY, itemX, itemY) < 100) isDragging = true;
   return false;
 }
 
 function touchEnded() {
-  if (!isDragging) return;
+  if (!isDragging) return false;
   isDragging = false;
 
   if (itemX < width * 0.35) {
-    if (currentItem === "pancake") { score++; bunnySize += 25; spawnItem(); }
+    if (currentItem === "pancake") { score++; bunnySize += 30; spawnItem(); }
     else { gameState = "POP"; }
   } else if (itemX > width * 0.65) {
-    if (currentItem === "milkshake") { score++; kittySize += 25; spawnItem(); }
+    if (currentItem === "milkshake") { score++; kittySize += 30; spawnItem(); }
     else { gameState = "POP"; }
   } else {
-    itemX = width/2; itemY = height/2;
+    // Reset to middle
+    itemX = width / 2; itemY = startY;
   }
+  
+  if (bunnySize > 450 || kittySize > 450) gameState = "POP";
+  return false;
 }
 
 function spawnItem() {
-  itemX = width / 2; itemY = height / 2;
+  itemX = width / 2;
+  itemY = startY; // Centered on the same line
   currentItem = random(["pancake", "milkshake"]);
 }
 
-function displayExplosion() {
-  background(255, 50, 50);
-  fill(255); textSize(60);
-  text("BOOM!", width/2, height/2);
-  textSize(20);
-  text("They ate too much! Tap to restart.", width/2, height/2 + 60);
+function resetGame() {
+  score = 0; bunnySize = 120; kittySize = 120;
+  gameState = "PLAY"; spawnItem();
 }
 
-function resetGame() {
-  score = 0; bunnySize = 150; kittySize = 150;
-  gameState = "PLAY"; spawnItem();
+function drawGameOver() {
+  background(255, 100, 100);
+  fill(255); textAlign(CENTER); textSize(60);
+  text("BOOM!", width / 2, height / 2);
+  textSize(20);
+  text("Score: " + score + "\nTap to restart", width / 2, height / 2 + 80);
 }
 
 function mousePressed() { touchStarted(); }
