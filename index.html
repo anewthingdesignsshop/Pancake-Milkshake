@@ -1,104 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pancake Milkshake Sorting</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
-        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0e2d6; font-family: sans-serif; }
-        canvas { border: 5px solid #6d4c41; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #fdf5e6; 
+            touch-action: none; /* Prevents scrolling while playing */
+        }
+        canvas { display: block; }
     </style>
 </head>
 <body>
 <script>
 let score = 0;
-let item; 
 let itemX, itemY;
+let targetX, targetY;
 let isDragging = false;
-let currentItemType = ""; // "pancake" or "milkshake"
+let currentItemType = "";
 let bunnyScale = 1.0;
 let kittyScale = 1.0;
-let gameState = "PLAY"; // PLAY or GAMEOVER
+let gameState = "PLAY";
+let lerpSpeed = 0.2; // Smooth movement speed
 
 function setup() {
-  createCanvas(800, 450);
+  createCanvas(windowWidth, windowHeight);
   spawnItem();
 }
 
 function draw() {
   background("#fdf5e6");
   
-  // UI - Score
-  fill(109, 76, 65);
-  textSize(24);
-  textAlign(CENTER);
-  text("Score: " + score, width / 2, 40);
+  // Background Decorations (Simple Diner feel)
+  noStroke();
+  fill("#f5e6d3");
+  rect(0, height * 0.7, width, height * 0.3); // Table/Floor
+  
+  // UI Score
+  fill("#6d4c41");
+  textAlign(CENTER, CENTER);
+  textSize(min(width, height) * 0.08);
+  textStyle(BOLD);
+  text(score, width / 2, height * 0.1);
 
   if (gameState === "PLAY") {
-    // 1. Draw Bunny (Left)
-    drawBunny(150, 300, bunnyScale);
-    
-    // 2. Draw Kitty (Right)
-    drawKitty(650, 300, kittyScale);
-    
-    // 3. Draw Active Food Item
+    // Smoothly follow finger/mouse
     if (isDragging) {
-      itemX = mouseX;
-      itemY = mouseY;
+      itemX = lerp(itemX, mouseX, lerpSpeed);
+      itemY = lerp(itemY, mouseY, lerpSpeed);
     }
+
+    // Render Characters with the updated Chibi style
+    drawChibiBunny(width * 0.2, height * 0.65, bunnyScale);
+    drawChibiKitty(width * 0.8, height * 0.65, kittyScale);
+    
+    // Draw Food
     drawFood(itemX, itemY, currentItemType);
     
   } else {
-    // GAME OVER SCREEN
-    fill(255, 0, 0);
-    textSize(50);
-    text("GAME OVER!", width / 2, height / 2);
-    textSize(20);
-    text("Click to Restart", width / 2, height / 2 + 50);
+    drawGameOver();
   }
 }
 
-function spawnItem() {
-  itemX = width / 2;
-  itemY = height / 2 + 50;
-  currentItemType = random(["pancake", "milkshake"]);
-}
+// --- MOBILE TOUCH CONTROLS ---
 
-function mousePressed() {
+function touchStarted() {
   if (gameState === "GAMEOVER") {
     resetGame();
-    return;
+    return false;
   }
-  // Check if clicking near the center item
-  if (dist(mouseX, mouseY, itemX, itemY) < 60) {
+  if (dist(mouseX, mouseY, itemX, itemY) < 100) {
     isDragging = true;
   }
+  return false;
 }
 
-function mouseReleased() {
-  if (!isDragging) return;
+function touchEnded() {
+  if (!isDragging) return false;
   isDragging = false;
 
-  // Logic: Was it sorted correctly?
-  if (itemX < 250) { // Dropped on Bunny side
+  // Sorting Logic
+  if (itemX < width * 0.35) { // Left Side (Bunny)
     if (currentItemType === "pancake") {
       score++;
-      bunnyScale += 0.05;
+      bunnyScale += 0.08;
       spawnItem();
     } else {
       gameState = "GAMEOVER";
     }
-  } else if (itemX > 550) { // Dropped on Kitty side
+  } else if (itemX > width * 0.65) { // Right Side (Kitty)
     if (currentItemType === "milkshake") {
       score++;
-      kittyScale += 0.05;
+      kittyScale += 0.08;
       spawnItem();
     } else {
       gameState = "GAMEOVER";
     }
   } else {
-    // Return to center if not dropped far enough
+    // Snap back to center
     itemX = width / 2;
-    itemY = height / 2 + 50;
+    itemY = height / 2;
   }
+  return false;
+}
+
+// Re-map mouse events to touch for desktop testing
+function mousePressed() { touchStarted(); }
+function mouseReleased() { touchEnded(); }
+
+function spawnItem() {
+  itemX = width / 2;
+  itemY = height / 2;
+  currentItemType = random(["pancake", "milkshake"]);
 }
 
 function resetGame() {
@@ -109,55 +127,106 @@ function resetGame() {
   spawnItem();
 }
 
-// --- Drawing Simple Shapes for Assets ---
+// --- CHIBI GRAPHICS (Code-based to match generated images) ---
 
-function drawBunny(x, y, s) {
+function drawChibiBunny(x, y, s) {
   push();
   translate(x, y);
-  scale(s);
-  fill(255); stroke(0);
-  ellipse(0, 0, 100, 120); // Body
-  ellipse(-20, -60, 20, 60); // Ear L
-  ellipse(20, -60, 20, 60); // Ear R
-  fill(0);
-  ellipse(-15, -10, 8, 8); // Beady Eye L
-  ellipse(15, -10, 8, 8); // Beady Eye R
-  noFill();
-  arc(0, 5, 10, 10, 0, PI); // Mouth
+  scale(s * (width/1000)); // Responsive scaling
+  
+  // Ears
+  fill(255); stroke(0); strokeWeight(2);
+  ellipse(-25, -90, 30, 100); 
+  ellipse(25, -90, 30, 100);
+  fill("#ffc0cb"); noStroke();
+  ellipse(-25, -90, 15, 70); 
+  ellipse(25, -90, 15, 70);
+
+  // Body
+  fill(255); stroke(50); strokeWeight(3);
+  ellipse(0, 0, 120, 140);
+  
+  // Face
+  fill(50); // Beady eyes
+  ellipse(-20, -10, 12, 15);
+  ellipse(20, -10, 12, 15);
+  fill("#ffc0cb"); noStroke(); // Cheeks
+  ellipse(-40, 10, 20, 10);
+  ellipse(40, 10, 20, 10);
+  
+  // Mouth
+  noFill(); stroke(50); strokeWeight(2);
+  arc(0, 5, 15, 10, 0, PI);
   pop();
 }
 
-function drawKitty(x, y, s) {
+function drawChibiKitty(x, y, s) {
   push();
   translate(x, y);
-  scale(s);
-  fill(200); stroke(0);
-  ellipse(0, 0, 110, 100); // Body
-  triangle(-40, -40, -20, -45, -45, -20); // Ear L
-  triangle(40, -40, 20, -45, 45, -20); // Ear R
-  fill(0);
-  ellipse(-20, -5, 8, 8); // Beady Eye L
-  ellipse(20, -5, 8, 8); // Beady Eye R
-  line(-5, 5, 5, 5); // Mouth
+  scale(s * (width/1000));
+  
+  // Ears
+  fill("#cccccc"); stroke(0); strokeWeight(2);
+  triangle(-50, -40, -20, -60, -60, -20);
+  triangle(50, -40, 20, -60, 60, -20);
+  
+  // Body
+  fill("#eeeeee"); stroke(50); strokeWeight(3);
+  ellipse(0, 0, 130, 110);
+  
+  // Stripes
+  fill("#aaaaaa"); noStroke();
+  rect(-15, -55, 30, 15, 5);
+  
+  // Face
+  fill(50); // Beady eyes
+  ellipse(-25, -5, 12, 15);
+  ellipse(25, -5, 12, 15);
+  fill("#ffc0cb"); // Cheeks
+  ellipse(-45, 15, 20, 10);
+  ellipse(45, 15, 20, 10);
+  
+  // Mouth
+  stroke(50); noFill();
+  line(-5, 10, 5, 10);
   pop();
 }
 
 function drawFood(x, y, type) {
   push();
   translate(x, y);
+  let pulse = 1 + sin(frameCount * 0.1) * 0.05; // Gentle float effect
+  scale(pulse * (width/800));
+  
   if (type === "pancake") {
-    fill(244, 208, 63); stroke(184, 134, 11);
-    ellipse(0, 0, 60, 20); // Bottom
-    ellipse(0, -5, 60, 20); // Middle
-    ellipse(0, -10, 60, 20); // Top
-    fill(255, 255, 0); rect(-5, -18, 10, 8); // Butter
+    // Modern Pancake Stack
+    stroke(139, 69, 19); strokeWeight(2);
+    fill("#f4d03f");
+    for(let i=0; i<3; i++) ellipse(0, i*8, 80, 25);
+    fill("#ffeb3b"); rect(-10, -15, 20, 15, 2); // Butter
   } else {
-    fill(255, 182, 193); stroke(0);
-    rect(-15, -30, 30, 50, 5); // Cup
-    stroke(255, 0, 0); strokeWeight(3);
-    line(5, -30, 10, -45); // Straw
+    // Strawberry Milkshake
+    fill("#ffb6c1"); stroke(50); strokeWeight(2);
+    rect(-20, -40, 40, 70, 5); // Glass
+    fill(255); ellipse(0, -40, 40, 20); // Foam
+    stroke("#ff0000"); strokeWeight(4);
+    line(10, -40, 15, -65); // Straw
   }
   pop();
+}
+
+function drawGameOver() {
+  fill("rgba(0,0,0,0.7)");
+  rect(0, 0, width, height);
+  fill(255);
+  textSize(width * 0.1);
+  text("OH NO!", width/2, height/2 - 20);
+  textSize(width * 0.05);
+  text("Tap to try again", width/2, height/2 + 60);
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
 </script>
 </body>
