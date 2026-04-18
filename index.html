@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Milkshake</title>
+    <title>Pancake Milkshake with Burst!</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #fdf5e6; touch-action: none; }
@@ -19,10 +19,11 @@ let isDragging = false;
 let bunnySize = 120;
 let kittySize = 120;
 let gameState = "PLAY";
+let particles = []; // Array to store explosion bits
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  startY = height * 0.6; // The "Line" everything sits on
+  startY = height * 0.6;
   spawnItem();
 }
 
@@ -50,7 +51,7 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  // Determine if characters should open their mouths
+  // Mouth Logic
   let bunnyHungry = (isDragging && itemX < width * 0.45);
   let kittyHungry = (isDragging && itemX > width * 0.55);
 
@@ -60,38 +61,31 @@ function displayGame() {
   // Draw Kitty (Right)
   drawChibiKitty(width * 0.8, startY, kittySize, kittyHungry);
 
-  // Draw Central Food Item
+  // Draw Food
   drawFood(itemX, itemY, currentItem);
 }
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
-  // Shake effect if close to popping
-  if (s > 300) translate(random(-2, 2), random(-2, 2));
+  if (s > 300) translate(random(-2, 2), random(-2, 2)); // Shake
   translate(x, y);
   
   // Ears & Body
   fill(255); stroke(0); strokeWeight(3);
   ellipse(-20, -s/1.5, s/4, s/1.5); ellipse(20, -s/1.5, s/4, s/1.5);
   ellipse(0, 0, s, s * 1.1);
+  fill(0); noStroke(); ellipse(-s/4, -s/10, s/10, s/8); ellipse(s/4, -s/10, s/10, s/8);
   
-  // Beady Eyes
-  fill(0); noStroke();
-  ellipse(-s/4, -s/10, s/10, s/8); ellipse(s/4, -s/10, s/10, s/8);
-  
-  // Mouth Logic
+  // Mouth
   stroke(0); noFill();
-  if (isOpen) {
-    fill(0); ellipse(0, s/6, s/4, s/3); // WIDE OPEN
-  } else {
-    arc(0, s/8, s/5, s/10, 0, PI); // Small smile
-  }
+  if (isOpen) { fill(0); ellipse(0, s/6, s/4, s/3); }
+  else { arc(0, s/8, s/5, s/10, 0, PI); }
   pop();
 }
 
 function drawChibiKitty(x, y, s, isOpen) {
   push();
-  if (s > 300) translate(random(-2, 2), random(-2, 2));
+  if (s > 300) translate(random(-2, 2), random(-2, 2)); // Shake
   translate(x, y);
   
   // Ears & Body
@@ -99,18 +93,12 @@ function drawChibiKitty(x, y, s, isOpen) {
   triangle(-s/2, -s/3, -s/4, -s/2, -s/8, -s/3);
   triangle(s/2, -s/3, s/4, -s/2, s/8, -s/3);
   ellipse(0, 0, s * 1.1, s);
+  fill(0); noStroke(); ellipse(-s/4, 0, s/10, s/8); ellipse(s/4, 0, s/10, s/8);
   
-  // Beady Eyes
-  fill(0); noStroke();
-  ellipse(-s/4, 0, s/10, s/8); ellipse(s/4, 0, s/10, s/8);
-  
-  // Mouth Logic
+  // Mouth
   stroke(0); noFill();
-  if (isOpen) {
-    fill(0); ellipse(0, s/6, s/3, s/4); // WIDE OPEN
-  } else {
-    line(-s/10, s/8, s/10, s/8); // Small line
-  }
+  if (isOpen) { fill(0); ellipse(0, s/6, s/3, s/4); }
+  else { line(-s/10, s/8, s/10, s/8); }
   pop();
 }
 
@@ -140,41 +128,86 @@ function touchEnded() {
   isDragging = false;
 
   if (itemX < width * 0.35) {
-    if (currentItem === "pancake") { score++; bunnySize += 30; spawnItem(); }
-    else { gameState = "POP"; }
+    if (currentItem === "pancake") { 
+      score++; bunnySize += 30; spawnItem(); 
+      if (bunnySize > 450) triggerPop("Bunny");
+    } else { triggerPop("Bunny"); } // Wrong food
   } else if (itemX > width * 0.65) {
-    if (currentItem === "milkshake") { score++; kittySize += 30; spawnItem(); }
-    else { gameState = "POP"; }
+    if (currentItem === "milkshake") { 
+      score++; kittySize += 30; spawnItem(); 
+      if (kittySize > 450) triggerPop("Kitty");
+    } else { triggerPop("Kitty"); } // Wrong food
   } else {
     // Reset to middle
     itemX = width / 2; itemY = startY;
   }
-  
-  if (bunnySize > 450 || kittySize > 450) gameState = "POP";
   return false;
+}
+
+function triggerPop(who) {
+  gameState = "POP";
+  let popColor = (who === "Bunny") ? "#f4d03f" : "#ffb6c1";
+  let popX = (who === "Bunny") ? width * 0.2 : width * 0.8;
+  
+  // Create explosion particles
+  for (let i = 0; i < 50; i++) {
+    particles.push(new FoodParticle(popX, startY, popColor));
+  }
 }
 
 function spawnItem() {
   itemX = width / 2;
-  itemY = startY; // Centered on the same line
+  itemY = startY;
   currentItem = random(["pancake", "milkshake"]);
 }
 
 function resetGame() {
   score = 0; bunnySize = 120; kittySize = 120;
+  particles = [];
   gameState = "PLAY"; spawnItem();
 }
 
 function drawGameOver() {
-  background(255, 100, 100);
-  fill(255); textAlign(CENTER); textSize(60);
+  // Update and draw all particles
+  for (let p of particles) {
+    p.update();
+    p.display();
+  }
+
+  fill("rgba(255, 100, 100, 0.8)"); textAlign(CENTER); textSize(60);
   text("BOOM!", width / 2, height / 2);
-  textSize(20);
-  text("Score: " + score + "\nTap to restart", width / 2, height / 2 + 80);
+  fill(255); textSize(20);
+  text("Final Score: " + score + "\nTap to restart", width / 2, height / 2 + 80);
 }
 
 function mousePressed() { touchStarted(); }
 function mouseReleased() { touchEnded(); }
+
+// --- Particle Class ---
+class FoodParticle {
+  constructor(x, y, col) {
+    this.x = x;
+    this.y = y;
+    this.col = col;
+    // Explode outwards in a random direction
+    this.vx = random(-15, 15);
+    this.vy = random(-15, 5);
+    this.gravity = 0.5;
+    this.size = random(5, 20);
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += this.gravity; // Gravity makes them fall
+    this.size *= 0.97; // Fade size over time
+  }
+
+  display() {
+    fill(this.col); noStroke();
+    ellipse(this.x, this.y, this.size);
+  }
+}
 </script>
 </body>
 </html>
