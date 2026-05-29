@@ -34,7 +34,55 @@
             width: 100vw;
         }
 
-        /* Glassmorphic Game Over Card Overlay */
+        /* Fixed HTML UI HUD Container */
+        #hud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999; /* Higher priority than any canvas renders */
+            display: flex;
+            justify-content: center;
+        }
+
+        /* HTML-Native Floating Score Card */
+        .score-card {
+            margin-top: calc(30px + env(safe-area-inset-top));
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 100%);
+            border: 4px solid #4A2E2B;
+            border-radius: 24px;
+            padding: 10px 50px;
+            box-shadow: 0 10px 20px rgba(74, 46, 43, 0.1);
+            pointer-events: auto;
+            transform: scale(1);
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 240px;
+            height: 64px;
+        }
+
+        /* Native CSS Hardware Accelerated Scale Jump Animation */
+        .score-card.pop-bump {
+            transform: scale(1.25) !important;
+        }
+
+        #score-display-text {
+            font-size: 32px;
+            color: #4A2E2B;
+            font-weight: 700;
+            letter-spacing: 1px;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* End Game Overlays */
         .overlay {
             position: absolute;
             top: 0;
@@ -46,7 +94,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 20;
+            z-index: 1000;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.4s ease;
@@ -120,6 +168,12 @@
 </head>
 <body>
 
+    <div id="hud-container">
+        <div class="score-card" id="score-card-dom">
+            <h1 id="score-display-text">SCORE: 0</h1>
+        </div>
+    </div>
+
     <div id="gameover-screen" class="overlay">
         <div class="overlay-card">
             <h1>BOOM!</h1>
@@ -140,19 +194,16 @@ let particles = [];
 
 let bunnyX, kittyX;
 
-// Score banner physical layout animation states
-let scoreBumpScale = 1.0;
-let scoreTargetScale = 1.0;
-
-let gameoverScreen, finalScoreText, restartButton;
+// DOM Selectors
+let scoreTextNode, scoreBoxNode, gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   updateLayout();
   
-  // Explicit font loading configuration for native canvas rendering
-  textFont('Fredoka');
-  
+  // Connect native layout markers
+  scoreTextNode = document.getElementById('score-display-text');
+  scoreBoxNode = document.getElementById('score-card-dom');
   gameoverScreen = document.getElementById('gameover-screen');
   finalScoreText = document.getElementById('final-score-text');
   
@@ -182,7 +233,6 @@ function draw() {
 
   if (gameState === "PLAY") {
     displayGame();
-    drawCanvasScoreHUD(); // Draws vector HUD score card directly into engine frame loop
   } else {
     displayExplosion();
   }
@@ -201,50 +251,8 @@ function displayGame() {
   drawChibiBunny(bunnyX, startY, bunnySize, bunnyHungry);
   drawChibiKitty(kittyX, startY, kittySize, kittyHungry);
 
-  // Active Sorting Food Object
+  // Active Food Object
   drawFood(itemX, itemY, currentItem, true);
-}
-
-// --- NATIVE CANVAS GLASSMORPHIC SCORE BANNER ENGINE ---
-function drawCanvasScoreHUD() {
-  push();
-  // Smoothly decay bump scale animation over delta frames
-  scoreBumpScale = lerp(scoreBumpScale, scoreTargetScale, 0.15);
-  
-  translate(width / 2, calcSafeTopMargin());
-  scale(scoreBumpScale);
-  
-  rectMode(CENTER);
-  stroke("#4A2E2B"); strokeWeight(1);
-  
-  // Multi-layered card drop shadow representation matching the reference asset
-  fill("rgba(74, 46, 43, 0.08)");
-  rect(0, 5, 260, 64, 20);
-  
-  // Base glassmorphic panel white frame body
-  fill("rgba(255, 255, 255, 0.88)");
-  stroke("#4A2E2B"); strokeWeight(0);
-  rect(0, 0, 260, 64, 20);
-  
-  // Highlighting top gloss sheen
-  fill("rgba(255, 255, 255, 0.25)");
-  rect(0, -16, 260, 32, 20);
-  
-  // Crisp vector text plotting
-  fill("#4A2E2B");
-  noStroke();
-  textAlign(CENTER, CENTER);
-  textSize(32);
-  textStyle(BOLD);
-  text("SCORE: " + score, 0, 2);
-  pop();
-}
-
-function calcSafeTopMargin() {
-  // Gracefully handles both portrait notches and landscape status heights dynamically
-  let safeInset = 45;
-  if (width > height) safeInset = 35;
-  return safeInset;
 }
 
 // --- CURVED CHIBI FORM RENDERING ENGINE ---
@@ -455,11 +463,11 @@ function touchEnded() {
   let kittyTargetRadius = kittySize * 0.75;
 
   if (distanceToBunny < bunnyTargetRadius) {
-    if (currentItem === "pancake") { triggerScoreBump(); bunnySize += 8; spawnItem(); }
+    if (currentItem === "pancake") { updateScoreDOM(); bunnySize += 8; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (distanceToKitty < kittyTargetRadius) {
-    if (currentItem === "milkshake") { triggerScoreBump(); kittySize += 8; spawnItem(); }
+    if (currentItem === "milkshake") { updateScoreDOM(); kittySize += 8; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
@@ -479,11 +487,22 @@ function spawnItem() {
   currentItem = random(["pancake", "milkshake"]);
 }
 
-function triggerScoreBump() {
+// Direct, unblocked pipeline updates score text and triggers CSS animation smoothly
+function updateScoreDOM() {
   score++;
   
-  // Triggers the vector layout bump calculation states inside p5 frame stream
-  scoreBumpScale = 1.25;
+  if (scoreTextNode) {
+    scoreTextNode.innerText = "SCORE: " + score;
+  }
+  
+  if (scoreBoxNode) {
+    scoreBoxNode.classList.remove('pop-bump');
+    void scoreBoxNode.offsetWidth; // Forces CSS engine layout computation to allow animation re-triggering
+    scoreBoxNode.classList.add('pop-bump');
+    setTimeout(() => {
+      if (scoreBoxNode) scoreBoxNode.classList.remove('pop-bump');
+    }, 120);
+  }
 }
 
 function triggerPop(who) {
@@ -509,7 +528,9 @@ function displayExplosion() {
 
 function resetGame() {
   score = 0;
-  scoreBumpScale = 1.0;
+  if (scoreTextNode) {
+    scoreTextNode.innerText = "SCORE: 0";
+  }
   bunnySize = 135;
   kittySize = 135;
   particles = [];
