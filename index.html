@@ -212,9 +212,16 @@ function setup() {
 }
 
 function updateLayout() {
+  // Adjust character spacing based on screen orientation
   startY = height * 0.70;
-  bunnyX = width * 0.22;
-  kittyX = width * 0.78;
+  if (width > height) {
+    // Wider landscape distribution prevents collision box overlaps
+    bunnyX = width * 0.25;
+    kittyX = width * 0.75;
+  } else {
+    bunnyX = width * 0.22;
+    kittyX = width * 0.78;
+  }
 }
 
 function draw() {
@@ -233,8 +240,9 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < (bunnySize * 1.2));
-  let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < (kittySize * 1.2));
+  // Adaptive proximity checks relative to current target sizes
+  let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < (bunnySize * 1.1));
+  let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < (kittySize * 1.1));
 
   // Characters
   drawChibiBunny(bunnyX, startY, bunnySize, bunnyHungry);
@@ -248,7 +256,7 @@ function displayGame() {
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
-  if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5)); 
+  if (s > 250) translate(random(-1.5, 1.5), random(-1.5, 1.5)); 
   translate(x, y);
   
   stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
@@ -292,10 +300,10 @@ function drawChibiBunny(x, y, s, isOpen) {
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
     fill("#6C504B");
-    ellipse(0, s*0.10, s*0.12, s*0.12);
+    ellipse(0, s*0.08, s*0.12, s*0.12);
   } else {
-    arc(-s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
-    arc(s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
   }
   
   drawFoodPlate(0, s*0.25, s * 0.95);
@@ -304,7 +312,7 @@ function drawChibiBunny(x, y, s, isOpen) {
 
 function drawChibiKitty(x, y, s, isOpen) {
   push();
-  if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5));
+  if (s > 250) translate(random(-1.5, 1.5), random(-1.5, 1.5));
   translate(x, y);
   
   stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
@@ -448,22 +456,24 @@ function touchEnded() {
   let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
   let distanceToKitty = dist(itemX, itemY, kittyX, startY);
 
-  let bunnyTargetRadius = bunnySize * 1.1;
-  let kittyTargetRadius = kittySize * 1.1;
+  // Growth-scaled target calculation thresholds
+  let bunnyTargetRadius = bunnySize * 0.75;
+  let kittyTargetRadius = kittySize * 0.75;
 
   if (distanceToBunny < bunnyTargetRadius) {
-    if (currentItem === "pancake") { score++; renderScore(); bunnySize += 25; spawnItem(); }
+    if (currentItem === "pancake") { score++; renderScore(); bunnySize += 8; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (distanceToKitty < kittyTargetRadius) {
-    if (currentItem === "milkshake") { score++; renderScore(); kittySize += 25; spawnItem(); }
+    if (currentItem === "milkshake") { score++; renderScore(); kittySize += 8; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
     itemX = width / 2; itemY = startY; 
   }
 
-  if (bunnySize > 400 || kittySize > 400) triggerPop(bunnySize > 400 ? "Bunny" : "Kitty");
+  // Maximum overfill ceiling threshold raised safely to 300
+  if (bunnySize > 300 || kittySize > 300) triggerPop(bunnySize > 300 ? "Bunny" : "Kitty");
   return false;
 }
 
@@ -476,7 +486,6 @@ function spawnItem() {
   currentItem = random(["pancake", "milkshake"]);
 }
 
-// Dedicated visual management pipeline completely separated from standard layout loops
 function renderScore() {
   scoreDisplay = document.getElementById('score-display');
   if (scoreDisplay) {
@@ -523,7 +532,7 @@ function resetGame() {
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
   updateLayout();
-  renderScore(); // Ensures rotation safely preserves active counts without structural data loss
+  renderScore(); 
   
   if (!isDragging) {
     itemX = width / 2;
