@@ -65,14 +65,6 @@
             overflow: hidden;
         }
 
-        .score-container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 50%;
-            background: rgba(255,255,255,0.2);
-            pointer-events: none;
-        }
-
         .score-container.bump {
             transform: scale(1.15);
         }
@@ -196,11 +188,14 @@ let kittySize = 135;
 let gameState = "PLAY"; 
 let particles = [];
 
+// Dynamic position coordinates tracking for accurate drop zoning
+let bunnyX, kittyX;
+
 let scoreDisplay, scoreBox, gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  startY = height * 0.70; 
+  updateLayout();
   
   scoreDisplay = document.getElementById('score-display');
   scoreBox = document.getElementById('score-box');
@@ -215,6 +210,12 @@ function setup() {
   });
   
   spawnItem();
+}
+
+function updateLayout() {
+  startY = height * 0.70;
+  bunnyX = width * 0.22;
+  kittyX = width * 0.78;
 }
 
 function draw() {
@@ -233,18 +234,19 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  let bunnyHungry = (isDragging && itemX < width * 0.42);
-  let kittyHungry = (isDragging && itemX > width * 0.58);
+  // Proximity tracking replaces arbitrary screen splits
+  let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < 180);
+  let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < 180);
 
   // Characters
-  drawChibiBunny(width * 0.22, startY, bunnySize, bunnyHungry);
-  drawChibiKitty(width * 0.78, startY, kittySize, kittyHungry);
+  drawChibiBunny(bunnyX, startY, bunnySize, bunnyHungry);
+  drawChibiKitty(kittyX, startY, kittySize, kittyHungry);
 
   // Active Sorting Food Object
   drawFood(itemX, itemY, currentItem, true);
 }
 
-// --- ORGANIC CURVE VECTOR RECONSTRUCTION ---
+// --- CURVED CHIBI FORM RENDERING ENGINE ---
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
@@ -253,7 +255,6 @@ function drawChibiBunny(x, y, s, isOpen) {
   
   stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
   
-  // High-set tall rounded ears
   ellipse(-s*0.22, -s*0.52, s*0.16, s*0.58);
   ellipse(s*0.22, -s*0.52, s*0.16, s*0.58);
   
@@ -261,24 +262,21 @@ function drawChibiBunny(x, y, s, isOpen) {
   ellipse(-s*0.22, -s*0.52, s*0.08, s*0.48);
   ellipse(s*0.22, -s*0.52, s*0.08, s*0.48);
   
-  // Plump, round organic head (Removes flat top and square cheeks)
   stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   beginShape();
   vertex(0, -s*0.25);
-  bezierVertex(s*0.32, -s*0.25, s*0.46, -s*0.08, s*0.46, s*0.06);   // Top Right to Upper Cheek
-  bezierVertex(s*0.46, s*0.24, s*0.26, s*0.32, 0, s*0.32);         // Lower Chubby Right Cheek Base
-  bezierVertex(-s*0.26, s*0.32, -s*0.46, s*0.24, -s*0.46, s*0.06); // Lower Chubby Left Cheek Base
-  bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   // Left Cheek to Top Center
+  bezierVertex(s*0.32, -s*0.25, s*0.46, -s*0.08, s*0.46, s*0.06);   
+  bezierVertex(s*0.46, s*0.24, s*0.26, s*0.32, 0, s*0.32);         
+  bezierVertex(-s*0.26, s*0.32, -s*0.46, s*0.24, -s*0.46, s*0.06); 
+  bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   
   endShape(CLOSE);
   
-  // Tiny paws
   ellipse(-s*0.08, s*0.18, s*0.07, s*0.09);
   ellipse(s*0.08, s*0.18, s*0.07, s*0.09);
 
   let dx = map(itemX, 0, width, -s/24, s/24);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Big round sparkle eyes
   fill("#3A2523"); noStroke();
   ellipse(-s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
   ellipse(s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
@@ -289,22 +287,19 @@ function drawChibiBunny(x, y, s, isOpen) {
   ellipse(-s*0.16 + dx, s*0.06 + dy, s*0.02, s*0.02); 
   ellipse(s*0.24 + dx, s*0.06 + dy, s*0.02, s*0.02);
   
-  // Rosy cheeks
   fill("rgba(242, 172, 162, 0.55)");
   ellipse(-s*0.32, s*0.11, s*0.16, s*0.08);
   ellipse(s*0.32, s*0.11, s*0.16, s*0.08);
   
-  // Smile Mouth
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
     fill("#6C504B");
-    ellipse(0, s*0.10, s*0.12, s*0.12);
+    ellipse(0, s*0.08, s*0.12, s*0.12);
   } else {
-    arc(-s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
-    arc(s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
   }
   
-  // Foreground Empty Dish
   drawFoodPlate(0, s*0.25, s * 0.95);
   pop();
 }
@@ -316,14 +311,12 @@ function drawChibiKitty(x, y, s, isOpen) {
   
   stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
   
-  // Curved Tail
   beginShape();
   vertex(s*0.35, s*0.1);
   bezierVertex(s*0.55, s*0.15, s*0.65, -s*0.15, s*0.55, -s*0.15);
   bezierVertex(s*0.48, -s*0.15, s*0.45, s*0.05, s*0.35, s*0.2);
   endShape(CLOSE);
   
-  // Calico Ears Structure
   fill("#D08D5B"); stroke("#4A2E2B");
   rect(-s*0.42, -s*0.36, s*0.2, s*0.26, s*0.06);
   fill("#FFFDF9");
@@ -333,7 +326,6 @@ function drawChibiKitty(x, y, s, isOpen) {
   ellipse(-s*0.32, -s*0.22, s*0.1, s*0.16);
   ellipse(s*0.32, -s*0.22, s*0.1, s*0.16);
   
-  // Plump, round organic head (Identical curve matching to the bunny)
   stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   beginShape();
   vertex(0, -s*0.25);
@@ -343,7 +335,6 @@ function drawChibiKitty(x, y, s, isOpen) {
   bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   
   endShape(CLOSE);
   
-  // Ginger calico side markings
   fill("#EAA86E"); noStroke();
   beginShape();
   vertex(-s*0.44, -s*0.05);
@@ -360,7 +351,6 @@ function drawChibiKitty(x, y, s, isOpen) {
   let dx = map(itemX, 0, width, -s/22, s/22);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Large shiny eyes
   fill("#3A2523"); noStroke();
   ellipse(-s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
   ellipse(s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
@@ -371,29 +361,25 @@ function drawChibiKitty(x, y, s, isOpen) {
   ellipse(-s*0.16 + dx, s*0.06 + dy, s*0.02, s*0.02); 
   ellipse(s*0.24 + dx, s*0.06 + dy, s*0.02, s*0.02);
   
-  // Whisker strands
   stroke("#4A2E2B"); strokeWeight(3);
   line(-s*0.44, s*0.06, -s*0.56, s*0.05);
   line(-s*0.44, s*0.12, -s*0.58, s*0.14);
   line(s*0.44, s*0.06, s*0.56, s*0.05);
   line(s*0.44, s*0.12, s*0.58, s*0.14);
   
-  // Blush
   fill("rgba(242, 172, 162, 0.55)"); noStroke();
   ellipse(-s*0.32, s*0.11, s*0.16, s*0.08);
   ellipse(s*0.32, s*0.11, s*0.16, s*0.08);
   
-  // Mouth
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
     fill("#6C504B");
     ellipse(0, s*0.08, s*0.12, s*0.12);
   } else {
-    arc(-s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
-    arc(s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
   }
   
-  // Foreground Empty Dish
   drawFoodPlate(0, s*0.25, s * 0.95);
   pop();
 }
@@ -449,7 +435,7 @@ function drawFood(x, y, type, hasPlate) {
   pop();
 }
 
-// --- ENGINE SYSTEM LOGIC LAYER ---
+// --- INTERACTIVE ENGINE LOGIC LAYER ---
 
 function touchStarted() {
   if (gameState !== "PLAY") return false;
@@ -461,15 +447,20 @@ function touchEnded() {
   if (!isDragging) return false;
   isDragging = false;
 
-  if (itemX < width * 0.35) {
+  // Precise coordinate distance checking prevents rotation drops
+  let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
+  let distanceToKitty = dist(itemX, itemY, kittyX, startY);
+
+  if (distanceToBunny < 130) {
     if (currentItem === "pancake") { updateScore(); bunnySize += 25; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
-  else if (itemX > width * 0.65) {
+  else if (distanceToKitty < 130) {
     if (currentItem === "milkshake") { updateScore(); kittySize += 25; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
+    // Snaps cleanly back to center if let go outside feeding radius
     itemX = width / 2; itemY = startY; 
   }
 
@@ -499,7 +490,7 @@ function triggerPop(who) {
   isDragging = false;
   
   let col = (who === "Bunny") ? "#F6D57F" : "#FBC3C3";
-  let px = (who === "Bunny") ? width * 0.22 : width * 0.78;
+  let px = (who === "Bunny") ? bunnyX : kittyX;
   
   for (let i = 0; i < 90; i++) particles.push(new Particle(px, startY, col));
   
@@ -518,8 +509,8 @@ function displayExplosion() {
 function resetGame() {
   score = 0;
   scoreDisplay.innerText = "SCORE: 0";
-  bunnySize = 135;
-  kittySize = 135;
+  bunnySize = 120;
+  kittySize = 120;
   particles = [];
   gameoverScreen.classList.remove('active');
   gameState = "PLAY"; 
@@ -528,7 +519,7 @@ function resetGame() {
 
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
-  startY = height * 0.70; 
+  updateLayout();
   
   scoreDisplay.innerText = "SCORE: " + score;
   
