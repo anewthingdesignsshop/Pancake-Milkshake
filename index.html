@@ -27,14 +27,14 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            background: linear-gradient(180deg, #FFF0D3 0%, #FADCA6 100%); 
+            background: #FFF1D6; 
             touch-action: none;
             font-family: 'Fredoka', sans-serif;
             height: 100vh;
             width: 100vw;
         }
 
-        /* Glossy Floating Score Header Layout */
+        /* Floating Score Header Layout */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -51,12 +51,12 @@
 
         .score-container {
             align-self: center;
-            background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.45) 100%);
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 100%);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             padding: 12px 60px;
             border-radius: 20px;
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 10px 25px rgba(74, 46, 43, 0.12);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 10px 25px rgba(74, 46, 43, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.5);
             transform: scale(1);
             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -69,7 +69,7 @@
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 50%;
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.2);
             pointer-events: none;
         }
 
@@ -93,7 +93,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 240, 211, 0.85); 
+            background: rgba(255, 241, 214, 0.85); 
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -236,101 +236,77 @@ function displayGame() {
   let bunnyHungry = (isDragging && itemX < width * 0.42);
   let kittyHungry = (isDragging && itemX > width * 0.58);
 
-  // Render Sophisticated Vector Characters
+  // Characters
   drawChibiBunny(width * 0.22, startY, bunnySize, bunnyHungry);
   drawChibiKitty(width * 0.78, startY, kittySize, kittyHungry);
 
-  // Active Center Drag-and-Drop Food Asset
+  // Central Food Item
   drawFood(itemX, itemY, currentItem, true);
 }
 
-// --- SOPHISTICATED VECTOR BEZIER RENDERING ENGINE ---
+// --- CURVED CHIBI FORM RENDERING ENGINE ---
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
   if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5)); 
   translate(x, y);
   
-  stroke("#4A2E2B"); strokeWeight(4); strokeJoin(ROUND); fill("#FFFDF9");
+  stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
   
-  // Left Ear Path Asymmetry
+  // Tall, upright rounded ears
+  ellipse(-s*0.22, -s*0.55, s*0.16, s*0.55);
+  ellipse(s*0.22, -s*0.55, s*0.16, s*0.55);
+  
+  // Ear inners
+  fill("#FCD2D1"); noStroke();
+  ellipse(-s*0.22, -s*0.55, s*0.08, s*0.45);
+  ellipse(s*0.22, -s*0.55, s*0.08, s*0.45);
+  
+  // Organic Plump Chibi Face Shape (Bezier curves fix the flatness)
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   beginShape();
-  vertex(-s*0.3, -s*0.3);
-  bezierVertex(-s*0.5, -s*1.2, -s*0.1, -s*1.3, -s*0.1, -s*0.4);
-  bezierVertex(-s*0.1, -s*0.3, -s*0.2, -s*0.2, -s*0.3, -s*0.3);
+  vertex(-s*0.45, -s*0.05);
+  bezierVertex(-s*0.5, -s*0.3, s*0.5, -s*0.3, s*0.45, -s*0.05); // Top forehead
+  bezierVertex(s*0.52, s*0.18, s*0.3, s*0.3, 0, s*0.3); // Right chubby cheek
+  bezierVertex(-s*0.3, s*0.3, -s*0.52, s*0.18, -s*0.45, -s*0.05); // Left chubby cheek
   endShape(CLOSE);
   
-  // Right Ear Path Asymmetry
-  beginShape();
-  vertex(s*0.1, -s*0.4);
-  bezierVertex(s*0.1, -s*1.3, s*0.5, -s*1.2, s*0.3, -s*0.3);
-  bezierVertex(s*0.2, -s*0.2, s*0.1, -s*0.3, s*0.1, -s*0.4);
-  endShape(CLOSE);
-
-  // Ear Inners Pink Base
-  fill("#FBCBC9"); noStroke();
-  beginShape();
-  vertex(-s*0.26, -s*0.4);
-  bezierVertex(-s*0.4, -s*1.1, -s*0.16, -s*1.1, -s*0.14, -s*0.4);
-  endShape(CLOSE);
-  
-  beginShape();
-  vertex(s*0.14, -s*0.4);
-  bezierVertex(s*0.16, -s*1.1, s*0.4, -s*1.1, s*0.26, -s*0.4);
-  endShape(CLOSE);
-  
-  // Sophisticated Chibi Head and Body contour map
-  stroke("#4A2E2B"); strokeWeight(4); fill("#FFFDF9");
-  beginShape();
-  vertex(-s*0.4, s*0.2);
-  bezierVertex(-s*0.6, -s*0.3, s*0.6, -s*0.3, s*0.4, s*0.2); // Cheeks curve profile
-  bezierVertex(s*0.5, s*0.6, -s*0.5, s*0.6, -s*0.4, s*0.2); // Tapered base torso
-  endShape(CLOSE);
-  
-  // Tucked In Paws Detail
-  beginShape();
-  vertex(-s*0.15, s*0.2);
-  bezierVertex(-s*0.2, s*0.38, -s*0.05, s*0.38, 0, s*0.24);
-  endShape();
-  
-  beginShape();
-  vertex(s*0.15, s*0.2);
-  bezierVertex(s*0.2, s*0.38, s*0.05, s*0.38, 0, s*0.24);
-  endShape();
-
-  // Left & Right Foot Pads
-  ellipse(-s*0.35, s*0.42, s*0.2, s*0.14);
-  ellipse(s*0.35, s*0.42, s*0.2, s*0.14);
+  // Tiny paws resting over the plate
+  ellipse(-s*0.08, s*0.18, s*0.07, s*0.09);
+  ellipse(s*0.08, s*0.18, s*0.07, s*0.09);
 
   let dx = map(itemX, 0, width, -s/24, s/24);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Large Premium Sparkle Eyes
+  // Large shiny eyes
   fill("#3A2523"); noStroke();
-  ellipse(-s*0.22 + dx, -s*0.02 + dy, s*0.14, s*0.14);
-  ellipse(s*0.22 + dx, -s*0.02 + dy, s*0.14, s*0.14);
-  fill(255);
-  ellipse(-s*0.20 + dx, -s*0.05 + dy, s*0.05, s*0.05); 
-  ellipse(s*0.24 + dx, -s*0.05 + dy, s*0.05, s*0.05);
-  ellipse(-s*0.25 + dx, 0 + dy, s*0.025, s*0.025); 
-  ellipse(s*0.19 + dx, 0 + dy, s*0.025, s*0.025);
+  ellipse(-s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
+  ellipse(s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
   
-  // Blush gradient
-  fill("rgba(240, 166, 155, 0.45)");
-  ellipse(-s*0.3, s*0.1, s*0.22, s*0.1);
-  ellipse(s*0.3, s*0.1, s*0.22, s*0.1);
+  // Eye Catchlights
+  fill(255);
+  ellipse(-s*0.24 + dx, -s*0.01 + dy, s*0.045, s*0.045); 
+  ellipse(s*0.20 + dx, -s*0.01 + dy, s*0.045, s*0.045);
+  ellipse(-s*0.18 + dx, s*0.04 + dy, s*0.02, s*0.02); 
+  ellipse(s*0.26 + dx, s*0.04 + dy, s*0.02, s*0.02);
+  
+  // Rosy blush
+  fill("rgba(242, 172, 162, 0.55)");
+  ellipse(-s*0.32, s*0.09, s*0.16, s*0.08);
+  ellipse(s*0.32, s*0.09, s*0.16, s*0.08);
   
   // Mouth
+  stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
-    fill("#6C504B"); stroke("#4A2E2B"); strokeWeight(3);
-    ellipse(0, s*0.1, s*0.18, s*0.16);
+    fill("#6C504B");
+    ellipse(0, s*0.08, s*0.12, s*0.12);
   } else {
-    noFill(); stroke("#4A2E2B"); strokeWeight(3);
-    arc(-s*0.04, s*0.08, s*0.08, s*0.08, 0, PI);
-    arc(s*0.04, s*0.08, s*0.08, s*0.08, 0, PI);
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
   }
   
-  drawFoodPlate(0, s*0.45, s * 1.1);
+  // Serving Plate
+  drawFoodPlate(0, s*0.25, s * 0.95);
   pop();
 }
 
@@ -339,123 +315,107 @@ function drawChibiKitty(x, y, s, isOpen) {
   if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5));
   translate(x, y);
   
-  stroke("#4A2E2B"); strokeWeight(4); strokeJoin(ROUND); fill("#FFFDF9");
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   
-  // Elegant Curved Tail Base
+  // Curved Tail
   beginShape();
-  vertex(s*0.35, s*0.2);
-  bezierVertex(s*0.7, s*0.3, s*0.8, -s*0.2, s*0.65, -s*0.18);
-  bezierVertex(s*0.72, -s*0.1, s*0.6, s*0.3, s*0.35, s*0.35);
+  vertex(s*0.35, s*0.1);
+  bezierVertex(s*0.55, s*0.15, s*0.65, -s*0.15, s*0.55, -s*0.15);
+  bezierVertex(s*0.48, -s*0.15, s*0.45, s*0.05, s*0.35, s*0.2);
   endShape(CLOSE);
   
-  // Ginger Stripe details on tail tip
-  fill("#EAA86E"); noStroke();
-  ellipse(s*0.68, -s*0.16, s*0.08, s*0.08);
-  
-  // Sophisticated Chibi Kitty Ears
-  stroke("#4A2E2B"); fill("#EAA86E");
-  beginShape();
-  vertex(-s*0.45, -s*0.05);
-  bezierVertex(-s*0.5, -s*0.45, -s*0.25, -s*0.5, -s*0.18, -s*0.14);
-  endShape(CLOSE);
-  
+  // Calico Head Patches
+  fill("#D08D5B"); stroke("#4A2E2B");
+  rect(-s*0.42, -s*0.32, s*0.2, s*0.26, s*0.06);
   fill("#FFFDF9");
-  beginShape();
-  vertex(s*0.18, -s*0.14);
-  bezierVertex(s*0.25, -s*0.5, s*0.5, -s*0.45, s*0.45, -s*0.05);
-  endShape(CLOSE);
+  rect(s*0.22, -s*0.32, s*0.2, s*0.26, s*0.06);
   
   // Ear Inners
-  fill("#FBCBC9");
+  fill("#FCD2D1"); noStroke();
+  ellipse(-s*0.32, -s*0.18, s*0.1, s*0.16);
+  ellipse(s*0.32, -s*0.18, s*0.1, s*0.16);
+  
+  // Plump Face Shape Matching the Bunny's Proportions
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   beginShape();
-  vertex(-s*0.4, -s*0.1); bezierVertex(-s*0.44, -s*0.38, -s*0.28, -s*0.38, -s*0.24, -s*0.14);
-  endShape(CLOSE);
-  beginShape();
-  vertex(s*0.24, -s*0.14); bezierVertex(s*0.28, -s*0.38, s*0.44, -s*0.38, s*0.4, -s*0.1);
+  vertex(-s*0.45, -s*0.05);
+  bezierVertex(-s*0.5, -s*0.3, s*0.5, -s*0.3, s*0.45, -s*0.05);
+  bezierVertex(s*0.52, s*0.18, s*0.3, s*0.3, 0, s*0.3);
+  bezierVertex(-s*0.3, s*0.3, -s*0.52, s*0.18, -s*0.45, -s*0.05);
   endShape(CLOSE);
   
-  // Main organic body/cheek layout
-  stroke("#4A2E2B"); strokeWeight(4); fill("#FFFDF9");
-  beginShape();
-  vertex(-s*0.45, s*0.18);
-  bezierVertex(-s*0.62, -s*0.25, s*0.62, -s*0.25, s*0.45, s*0.18);
-  bezierVertex(s*0.5, s*0.55, -s*0.5, s*0.55, -s*0.45, s*0.18);
-  endShape(CLOSE);
-  
-  // Beautiful Ginger Mask Overlay Patches (Left/Right Asymmetric feel)
+  // Ginger markings on the cheeks
   fill("#EAA86E"); noStroke();
   beginShape();
-  vertex(-s*0.48, -s*0.05);
-  bezierVertex(-s*0.4, -s*0.18, -s*0.2, -s*0.18, -s*0.15, -s*0.02);
-  bezierVertex(-s*0.2, s*0.1, -s*0.4, s*0.08, -s*0.48, -s*0.05);
+  vertex(-s*0.44, -s*0.05);
+  bezierVertex(-s*0.38, -s*0.02, -s*0.32, s*0.08, -s*0.34, s*0.15);
+  bezierVertex(-s*0.42, s*0.18, -s*0.48, s*0.1, -s*0.44, -s*0.05);
+  endShape(CLOSE);
+  
+  beginShape();
+  vertex(s*0.44, -s*0.05);
+  bezierVertex(s*0.38, -s*0.02, s*0.32, s*0.08, s*0.34, s*0.15);
+  bezierVertex(s*0.42, s*0.18, s*0.48, s*0.1, s*0.44, -s*0.05);
   endShape(CLOSE);
 
-  beginShape();
-  vertex(s*0.48, -s*0.05);
-  bezierVertex(s*0.4, -s*0.18, s*0.2, -s*0.18, s*0.15, -s*0.02);
-  bezierVertex(s*0.2, s*0.1, s*0.4, s*0.08, s*0.48, -s*0.05);
-  endShape(CLOSE);
-  
-  // Paws mapping
-  stroke("#4A2E2B"); fill("#FFFDF9");
-  ellipse(-s*0.14, s*0.38, s*0.16, s*0.18);
-  ellipse(s*0.14, s*0.38, s*0.16, s*0.18);
-  
   let dx = map(itemX, 0, width, -s/22, s/22);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Expressive Chibi Eyes
+  // Large shiny eyes
   fill("#3A2523"); noStroke();
-  ellipse(-s*0.22 + dx, -s*0.02 + dy, s*0.14, s*0.14);
-  ellipse(s*0.22 + dx, -s*0.02 + dy, s*0.14, s*0.14);
+  ellipse(-s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
+  ellipse(s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
+  
+  // Catchlights
   fill(255);
-  ellipse(-s*0.20 + dx, -s*0.05 + dy, s*0.05, s*0.05); 
-  ellipse(s*0.24 + dx, -s*0.05 + dy, s*0.05, s*0.05);
-  ellipse(-s*0.25 + dx, 0 + dy, s*0.025, s*0.025); 
-  ellipse(s*0.19 + dx, 0 + dy, s*0.025, s*0.025);
+  ellipse(-s*0.24 + dx, -s*0.01 + dy, s*0.045, s*0.045); 
+  ellipse(s*0.20 + dx, -s*0.01 + dy, s*0.045, s*0.045);
+  ellipse(-s*0.18 + dx, s*0.04 + dy, s*0.02, s*0.02); 
+  ellipse(s*0.26 + dx, s*0.04 + dy, s*0.02, s*0.02);
   
-  // Delicate Whiskers lines
-  stroke("#4A2E2B"); strokeWeight(2.5);
-  line(-s*0.44, s*0.04, -s*0.56, s*0.02);
-  line(-s*0.44, s*0.1, -s*0.58, s*0.12);
-  line(s*0.44, s*0.04, s*0.56, s*0.02);
-  line(s*0.44, s*0.1, s*0.58, s*0.12);
+  // Whiskers
+  stroke("#4A2E2B"); strokeWeight(3);
+  line(-s*0.44, s*0.05, -s*0.56, s*0.04);
+  line(-s*0.44, s*0.11, -s*0.58, s*0.13);
+  line(s*0.44, s*0.05, s*0.56, s*0.04);
+  line(s*0.44, s*0.11, s*0.58, s*0.13);
   
-  // Delicate Blush
-  fill("rgba(240, 166, 155, 0.45)"); noStroke();
-  ellipse(-s*0.3, s*0.1, s*0.22, s*0.1);
-  ellipse(s*0.3, s*0.1, s*0.22, s*0.1);
+  // Blush
+  fill("rgba(242, 172, 162, 0.55)"); noStroke();
+  ellipse(-s*0.32, s*0.09, s*0.16, s*0.08);
+  ellipse(s*0.32, s*0.09, s*0.16, s*0.08);
   
   // Mouth
+  stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
-    fill("#6C504B"); stroke("#4A2E2B"); strokeWeight(3);
-    ellipse(0, s*0.1, s*0.22, s*0.15);
+    fill("#6C504B");
+    ellipse(0, s*0.08, s*0.12, s*0.12);
   } else {
-    noFill(); stroke("#4A2E2B"); strokeWeight(3);
-    arc(-s*0.04, s*0.08, s*0.08, s*0.08, 0, PI);
-    arc(s*0.04, s*0.08, s*0.08, s*0.08, 0, PI);
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
   }
   
-  drawFoodPlate(0, s*0.45, s * 1.1);
+  // Serving Plate
+  drawFoodPlate(0, s*0.25, s * 0.95);
   pop();
 }
 
 function drawFoodPlate(mx, my, pw) {
   push();
   translate(mx, my);
-  stroke("#4A2E2B"); strokeWeight(3.5); fill("#FFFDF9");
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   ellipse(0, 0, pw, pw * 0.28); 
-  fill("#EBE4DC"); noStroke();
+  fill("#ECE7E1"); noStroke();
   ellipse(0, 0, pw * 0.85, pw * 0.22); 
-  stroke("#4A2E2B"); noFill(); strokeWeight(1.5);
-  ellipse(0, 0, pw * 0.85, pw * 0.22); // Fine inner plate line asset rim
+  stroke("#4A2E2B"); noFill(); strokeWeight(2);
+  ellipse(0, 0, pw * 0.85, pw * 0.22); 
   pop();
 }
 
 function drawFood(x, y, type, hasPlate) {
   push();
   translate(x, y);
-  stroke("#4A2E2B"); strokeWeight(3.5);
+  stroke("#4A2E2B"); strokeWeight(4.5);
   
   if (type === "pancake") {
     if(hasPlate) drawFoodPlate(0, 15, 95);
@@ -465,19 +425,19 @@ function drawFood(x, y, type, hasPlate) {
     
     fill("#E4985E"); noStroke(); 
     ellipse(0, -3, 54, 15);
-    stroke("#4A2E2B"); fill("#E4985E"); strokeWeight(3);
+    stroke("#4A2E2B"); fill("#E4985E"); strokeWeight(3.5);
     rect(-20, -3, 8, 12, 4);
     rect(12, -3, 6, 10, 3);
     
-    fill("#FFF199"); stroke("#4A2E2B"); strokeWeight(3); 
+    fill("#FFF199"); stroke("#4A2E2B"); strokeWeight(3.5); 
     rect(-10, -16, 20, 12, 3);
   } else {
     if(hasPlate) drawFoodPlate(0, 15, 95);
     
-    fill("rgba(255, 255, 255, 0.45)"); rect(-20, -38, 40, 68, 8);
+    fill("rgba(255, 255, 255, 0.5)"); rect(-20, -38, 40, 68, 8);
     noStroke(); fill("#FBC3C3"); rect(-17, -34, 34, 58, 5);
     
-    fill("#FFFDF9"); stroke("#4A2E2B"); strokeWeight(3);
+    fill("#FFFDF9"); stroke("#4A2E2B"); strokeWeight(3.5);
     ellipse(0, -38, 42, 18);
     ellipse(0, -47, 26, 14);
     
@@ -486,7 +446,7 @@ function drawFood(x, y, type, hasPlate) {
     noFill(); stroke("#4A2E2B"); strokeWeight(2);
     arc(4, -62, 12, 10, PI, TWO_PI - HALF_PI); 
     
-    stroke("#E27D73"); strokeWeight(4); line(10, -38, 18, -58);
+    stroke("#E27D73"); strokeWeight(4.5); line(10, -38, 18, -58);
   }
   pop();
 }
