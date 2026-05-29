@@ -34,51 +34,7 @@
             width: 100vw;
         }
 
-        /* HUD Header */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: calc(40px + env(safe-area-inset-top)) 20px 20px 20px;
-            z-index: 10;
-        }
-
-        .score-container {
-            align-self: center;
-            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 100%);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 12px 60px;
-            border-radius: 20px;
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 10px 25px rgba(74, 46, 43, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transform: scale(1);
-            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .score-container.bump {
-            transform: scale(1.15);
-        }
-
-        #score-display {
-            font-size: 34px;
-            color: #4A2E2B; 
-            font-weight: 700;
-            text-align: center;
-            line-height: 1.2;
-            letter-spacing: 1px;
-        }
-
-        /* Overlays */
+        /* Glassmorphic Game Over Card Overlay */
         .overlay {
             position: absolute;
             top: 0;
@@ -164,12 +120,6 @@
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div class="score-container" id="score-box">
-            <div id="score-display">SCORE: 0</div>
-        </div>
-    </div>
-
     <div id="gameover-screen" class="overlay">
         <div class="overlay-card">
             <h1>BOOM!</h1>
@@ -190,14 +140,19 @@ let particles = [];
 
 let bunnyX, kittyX;
 
-let scoreDisplay, scoreBox, gameoverScreen, finalScoreText, restartButton;
+// Score banner physical layout animation states
+let scoreBumpScale = 1.0;
+let scoreTargetScale = 1.0;
+
+let gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   updateLayout();
   
-  scoreDisplay = document.getElementById('score-display');
-  scoreBox = document.getElementById('score-box');
+  // Explicit font loading configuration for native canvas rendering
+  textFont('Fredoka');
+  
   gameoverScreen = document.getElementById('gameover-screen');
   finalScoreText = document.getElementById('final-score-text');
   
@@ -212,10 +167,8 @@ function setup() {
 }
 
 function updateLayout() {
-  // Adjust character spacing based on screen orientation
   startY = height * 0.70;
   if (width > height) {
-    // Wider landscape distribution prevents collision box overlaps
     bunnyX = width * 0.25;
     kittyX = width * 0.75;
   } else {
@@ -229,6 +182,7 @@ function draw() {
 
   if (gameState === "PLAY") {
     displayGame();
+    drawCanvasScoreHUD(); // Draws vector HUD score card directly into engine frame loop
   } else {
     displayExplosion();
   }
@@ -240,7 +194,6 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  // Adaptive proximity checks relative to current target sizes
   let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < (bunnySize * 1.1));
   let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < (kittySize * 1.1));
 
@@ -250,6 +203,48 @@ function displayGame() {
 
   // Active Sorting Food Object
   drawFood(itemX, itemY, currentItem, true);
+}
+
+// --- NATIVE CANVAS GLASSMORPHIC SCORE BANNER ENGINE ---
+function drawCanvasScoreHUD() {
+  push();
+  // Smoothly decay bump scale animation over delta frames
+  scoreBumpScale = lerp(scoreBumpScale, scoreTargetScale, 0.15);
+  
+  translate(width / 2, calcSafeTopMargin());
+  scale(scoreBumpScale);
+  
+  rectMode(CENTER);
+  stroke("#4A2E2B"); strokeWeight(1);
+  
+  // Multi-layered card drop shadow representation matching the reference asset
+  fill("rgba(74, 46, 43, 0.08)");
+  rect(0, 5, 260, 64, 20);
+  
+  // Base glassmorphic panel white frame body
+  fill("rgba(255, 255, 255, 0.88)");
+  stroke("#4A2E2B"); strokeWeight(0);
+  rect(0, 0, 260, 64, 20);
+  
+  // Highlighting top gloss sheen
+  fill("rgba(255, 255, 255, 0.25)");
+  rect(0, -16, 260, 32, 20);
+  
+  // Crisp vector text plotting
+  fill("#4A2E2B");
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(32);
+  textStyle(BOLD);
+  text("SCORE: " + score, 0, 2);
+  pop();
+}
+
+function calcSafeTopMargin() {
+  // Gracefully handles both portrait notches and landscape status heights dynamically
+  let safeInset = 45;
+  if (width > height) safeInset = 35;
+  return safeInset;
 }
 
 // --- CURVED CHIBI FORM RENDERING ENGINE ---
@@ -300,7 +295,7 @@ function drawChibiBunny(x, y, s, isOpen) {
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
     fill("#6C504B");
-    ellipse(0, s*0.08, s*0.12, s*0.12);
+    ellipse(0, s*0.10, s*0.12, s*0.12);
   } else {
     arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
     arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
@@ -456,23 +451,21 @@ function touchEnded() {
   let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
   let distanceToKitty = dist(itemX, itemY, kittyX, startY);
 
-  // Growth-scaled target calculation thresholds
   let bunnyTargetRadius = bunnySize * 0.75;
   let kittyTargetRadius = kittySize * 0.75;
 
   if (distanceToBunny < bunnyTargetRadius) {
-    if (currentItem === "pancake") { score++; renderScore(); bunnySize += 8; spawnItem(); }
+    if (currentItem === "pancake") { triggerScoreBump(); bunnySize += 8; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (distanceToKitty < kittyTargetRadius) {
-    if (currentItem === "milkshake") { score++; renderScore(); kittySize += 8; spawnItem(); }
+    if (currentItem === "milkshake") { triggerScoreBump(); kittySize += 8; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
     itemX = width / 2; itemY = startY; 
   }
 
-  // Maximum overfill ceiling threshold raised safely to 300
   if (bunnySize > 300 || kittySize > 300) triggerPop(bunnySize > 300 ? "Bunny" : "Kitty");
   return false;
 }
@@ -486,15 +479,11 @@ function spawnItem() {
   currentItem = random(["pancake", "milkshake"]);
 }
 
-function renderScore() {
-  scoreDisplay = document.getElementById('score-display');
-  if (scoreDisplay) {
-    scoreDisplay.innerText = "SCORE: " + score;
-  }
-  if (scoreBox) {
-    scoreBox.classList.add('bump');
-    setTimeout(() => { if(scoreBox) scoreBox.classList.remove('bump'); }, 120);
-  }
+function triggerScoreBump() {
+  score++;
+  
+  // Triggers the vector layout bump calculation states inside p5 frame stream
+  scoreBumpScale = 1.25;
 }
 
 function triggerPop(who) {
@@ -520,7 +509,7 @@ function displayExplosion() {
 
 function resetGame() {
   score = 0;
-  renderScore();
+  scoreBumpScale = 1.0;
   bunnySize = 135;
   kittySize = 135;
   particles = [];
@@ -532,7 +521,6 @@ function resetGame() {
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
   updateLayout();
-  renderScore(); 
   
   if (!isDragging) {
     itemX = width / 2;
