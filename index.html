@@ -452,11 +452,11 @@ function touchEnded() {
   let kittyTargetRadius = kittySize * 1.1;
 
   if (distanceToBunny < bunnyTargetRadius) {
-    if (currentItem === "pancake") { updateScore(); bunnySize += 25; spawnItem(); }
+    if (currentItem === "pancake") { score++; renderScore(); bunnySize += 25; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (distanceToKitty < kittyTargetRadius) {
-    if (currentItem === "milkshake") { updateScore(); kittySize += 25; spawnItem(); }
+    if (currentItem === "milkshake") { score++; renderScore(); kittySize += 25; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
@@ -476,19 +476,15 @@ function spawnItem() {
   currentItem = random(["pancake", "milkshake"]);
 }
 
-// Fixed function explicitly re-binds UI elements on update
-function updateScore() {
-  score++;
-  
-  // Re-fetch DOM node to prevent rotation separation
+// Dedicated visual management pipeline completely separated from standard layout loops
+function renderScore() {
   scoreDisplay = document.getElementById('score-display');
   if (scoreDisplay) {
     scoreDisplay.innerText = "SCORE: " + score;
   }
-  
   if (scoreBox) {
     scoreBox.classList.add('bump');
-    setTimeout(() => scoreBox.classList.remove('bump'), 120);
+    setTimeout(() => { if(scoreBox) scoreBox.classList.remove('bump'); }, 120);
   }
 }
 
@@ -515,10 +511,7 @@ function displayExplosion() {
 
 function resetGame() {
   score = 0;
-  scoreDisplay = document.getElementById('score-display');
-  if (scoreDisplay) {
-    scoreDisplay.innerText = "SCORE: 0";
-  }
+  renderScore();
   bunnySize = 135;
   kittySize = 135;
   particles = [];
@@ -530,11 +523,7 @@ function resetGame() {
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
   updateLayout();
-  
-  scoreDisplay = document.getElementById('score-display');
-  if (scoreDisplay) {
-    scoreDisplay.innerText = "SCORE: " + score;
-  }
+  renderScore(); // Ensures rotation safely preserves active counts without structural data loss
   
   if (!isDragging) {
     itemX = width / 2;
