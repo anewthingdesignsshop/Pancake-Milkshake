@@ -2,23 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Pancake Milkshake</title>
     
-    <!-- <link rel="apple-touch-icon" href="https://images.rawpixel.com/image_400/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA1L2pvYjcyOS0xMTUteC5qcGc.jpg"> -->
+    <link rel="apple-touch-icon" href="https://i.imgur.com/uRovA7G.png"> 
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #fdf5e6; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-        canvas { display: block; }
+        * {
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: linear-gradient(180deg, #ffedd5 0%, #fdf5e6 100%); 
+            touch-action: none;
+            font-family: 'Fredoka', sans-serif;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Modern Glassmorphism HUD Interface */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to p5 canvas */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+            zIndex: 10;
+        }
+
+        .score-container {
+            align-self: center;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 10px 30px;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px 0 rgba(109, 76, 65, 0.15);
+            border: 3px solid #6d4c41;
+            transform: scale(1);
+            transition: transform 0.1s ease;
+            pointer-events: auto;
+        }
+
+        .score-container.bump {
+            transform: scale(1.2);
+        }
+
+        #score-label {
+            font-size: 14px;
+            color: #8d6e63;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-bottom: -2px;
+        }
+
+        #score-display {
+            font-size: 42px;
+            color: #5d4037;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1;
+        }
+
+        /* Overlay Screens (Game Over / Start) */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 107, 107, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            zIndex: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .overlay-card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            border: 4px solid #6d4c41;
+            max-width: 90%;
+            width: 320px;
+        }
+
+        .overlay h1 {
+            color: #ff4757;
+            font-size: 48px;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 0px #f1f2f6;
+        }
+
+        .overlay p {
+            color: #5d4037;
+            font-size: 18px;
+            margin: 0 0 25px 0;
+            font-weight: 700;
+        }
+
+        .btn-restart {
+            background: #4cd137;
+            color: white;
+            border: 3px solid #6d4c41;
+            padding: 12px 30px;
+            font-size: 20px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0px #6d4c41;
+            transition: transform 0.1s ease;
+        }
+
+        .btn-restart:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px #6d4c41;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            zIndex: 1;
+        }
     </style>
 </head>
 <body>
+
+    <div id="ui-layer">
+        <div class="score-container" id="score-box">
+            <div id="score-label">Score</div>
+            <div id="score-display">0</div>
+        </div>
+        <div></div> </div>
+
+    <div id="gameover-screen" class="overlay">
+        <div class="overlay-card">
+            <h1>BOOM!</h1>
+            <p id="final-score-text">Final Score: 0</p>
+            <button class="btn-restart" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
 <script>
-/** * GAME VARIABLES
- */
+/** * GAME VARIABLES */
 let score = 0;
 let itemX, itemY, startY;
 let currentItem = "";
@@ -28,21 +189,31 @@ let kittySize = 120;
 let gameState = "PLAY"; 
 let particles = [];
 
+// DOM Element Selectors
+let scoreDisplay, scoreBox, gameoverScreen, finalScoreText;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  startY = height * 0.6; 
+  startY = height * 0.62; 
+  
+  // Link Javascript variables to HTML Interface elements
+  scoreDisplay = document.getElementById('score-display');
+  scoreBox = document.getElementById('score-box');
+  gameoverScreen = document.getElementById('gameover-screen');
+  finalScoreText = document.getElementById('final-score-text');
+  
   spawnItem();
 }
 
 function draw() {
-  background("#fdf5e6");
+  clear(); // Keeps canvas clear so background CSS gradient shines through
   
-  // 1. Draw Table/Environment
+  // 1. Draw Table/Environment Platform
   noStroke();
-  fill("#e0c9a6"); 
+  fill("rgba(224, 201, 166, 0.95)"); 
   rect(0, startY + 45, width, height - startY);
-  stroke("#d7ccc8"); 
-  strokeWeight(4); 
+  stroke("#6d4c41"); 
+  strokeWeight(5); 
   line(0, startY + 45, width, startY + 45);
 
   if (gameState === "PLAY") {
@@ -53,25 +224,20 @@ function draw() {
 }
 
 function displayGame() {
-  // Score UI - Scaled to screen width
-  fill("#6d4c41"); noStroke(); textAlign(CENTER); textSize(width * 0.1);
-  text(score, width / 2, height * 0.15);
-
-  // Dragging logic
   if (isDragging) {
     itemX = mouseX;
     itemY = mouseY;
   }
 
-  // Hunger Check
+  // Hunger Look-Ahead Range Checks
   let bunnyHungry = (isDragging && itemX < width * 0.45);
   let kittyHungry = (isDragging && itemX > width * 0.55);
 
-  // Characters - Positions are relative to width so they move on rotation
-  drawChibiBunny(width * 0.2, startY, bunnySize, bunnyHungry);
-  drawChibiKitty(width * 0.8, startY, kittySize, kittyHungry);
+  // Characters
+  drawChibiBunny(width * 0.22, startY, bunnySize, bunnyHungry);
+  drawChibiKitty(width * 0.78, startY, kittySize, kittyHungry);
 
-  // Food Item
+  // Sorting Object
   drawFood(itemX, itemY, currentItem);
 }
 
@@ -80,22 +246,27 @@ function drawChibiBunny(x, y, s, isOpen) {
   if (s > 300) translate(random(-2, 2), random(-2, 2)); 
   translate(x, y);
   
-  fill(255); stroke(0); strokeWeight(3);
-  ellipse(-s/4, -s/1.5, s/4, s/1.5); 
-  ellipse(s/4, -s/1.5, s/4, s/1.5);
+  fill(255); stroke("#6d4c41"); strokeWeight(4);
+  ellipse(-s/4, -s/1.5, s/3.8, s/1.3); 
+  ellipse(s/4, -s/1.5, s/3.8, s/1.3);
   ellipse(0, 0, s, s * 1.1);
   
-  let dx = map(itemX, 0, width, -s/20, s/20);
-  let dy = map(itemY, 0, height, -s/30, s/30);
-  fill(0); noStroke();
-  ellipse(-s/4 + dx, -s/10 + dy, s/10, s/8); 
-  ellipse(s/4 + dx, -s/10 + dy, s/10, s/8);
+  let dx = map(itemX, 0, width, -s/18, s/18);
+  let dy = map(itemY, 0, height, -s/28, s/28);
+  fill("#2d3436"); noStroke();
+  ellipse(-s/4 + dx, -s/10 + dy, s/9, s/7.2); 
+  ellipse(s/4 + dx, -s/10 + dy, s/9, s/7.2);
+  
+  // Pink Cheeks
+  fill("rgba(255, 165, 175, 0.6)");
+  ellipse(-s/3, s/15, s/4, s/8);
+  ellipse(s/3, s/15, s/4, s/8);
   
   if (isOpen) {
-    fill("#5d4037"); stroke(0);
+    fill("#5d4037"); stroke("#6d4c41");
     ellipse(0, s/6, s/3.5, s/2.5);
   } else {
-    noFill(); stroke(0);
+    noFill(); stroke("#6d4c41");
     arc(0, s/8, s/5, s/10, 0, PI);
   }
   pop();
@@ -106,22 +277,27 @@ function drawChibiKitty(x, y, s, isOpen) {
   if (s > 300) translate(random(-2, 2), random(-2, 2));
   translate(x, y);
   
-  fill(220); stroke(0); strokeWeight(3);
-  triangle(-s/2, -s/3, -s/4, -s/2, -s/8, -s/3);
-  triangle(s/2, -s/3, s/4, -s/2, s/8, -s/3);
+  fill(235); stroke("#6d4c41"); strokeWeight(4);
+  triangle(-s/2, -s/3, -s/3.5, -s/1.8, -s/8, -s/3);
+  triangle(s/2, -s/3, s/3.5, -s/1.8, s/8, -s/3);
   ellipse(0, 0, s * 1.1, s);
   
-  let dx = map(itemX, 0, width, -s/20, s/20);
-  let dy = map(itemY, 0, height, -s/30, s/30);
-  fill(0); noStroke();
-  ellipse(-s/4 + dx, 0 + dy, s/10, s/8); 
-  ellipse(s/4 + dx, 0 + dy, s/10, s/8);
+  let dx = map(itemX, 0, width, -s/18, s/18);
+  let dy = map(itemY, 0, height, -s/28, s/28);
+  fill("#2d3436"); noStroke();
+  ellipse(-s/4 + dx, 0 + dy, s/9, s/7.2); 
+  ellipse(s/4 + dx, 0 + dy, s/9, s/7.2);
+  
+  // Pink Cheeks
+  fill("rgba(255, 165, 175, 0.6)");
+  ellipse(-s/2.8, s/6, s/4, s/8);
+  ellipse(s/2.8, s/6, s/4, s/8);
   
   if (isOpen) {
-    fill("#5d4037"); stroke(0);
+    fill("#5d4037"); stroke("#6d4c41");
     ellipse(0, s/6, s/2.5, s/3.5);
   } else {
-    stroke(0); line(-s/10, s/8, s/10, s/8);
+    stroke("#6d4c41"); line(-s/10, s/8, s/10, s/8);
   }
   pop();
 }
@@ -129,25 +305,26 @@ function drawChibiKitty(x, y, s, isOpen) {
 function drawFood(x, y, type) {
   push();
   translate(x, y);
+  stroke("#6d4c41"); strokeWeight(3);
   if (type === "pancake") {
-    fill(240); noStroke(); ellipse(0, 15, 80, 25);
-    fill("#f4d03f"); stroke(139, 69, 19, 100);
-    for(let i=0; i<3; i++) ellipse(0, i*4, 65, 20);
-    fill("#d35400"); noStroke(); ellipse(0, -5, 40, 10);
-    fill("#ffeb3b"); stroke(255, 200, 0); rect(-8, -16, 16, 10, 2);
+    fill(245); ellipse(0, 15, 80, 25); // Plate
+    fill("#f4d03f");
+    for(let i=0; i<3; i++) ellipse(0, i*4, 65, 20); // Pancake Layer Stack
+    fill("#d35400"); noStroke(); ellipse(0, -5, 40, 10); // Syrup Drizzle
+    fill("#ffeb3b"); stroke("#6d4c41"); rect(-8, -16, 16, 10, 2); // Butter Slice
   } else {
-    fill(255, 255, 255, 180); stroke(255);
-    rect(-20, -40, 40, 70, 5);
-    noStroke(); fill("#ffb6c1"); rect(-17, -35, 34, 60, 3);
-    fill(255); ellipse(0, -40, 40, 20);
-    fill("#e74c3c"); ellipse(0, -50, 12, 12);
-    stroke("#e74c3c"); strokeWeight(4); line(8, -40, 15, -60);
+    fill("rgba(255, 255, 255, 0.6)");
+    rect(-20, -40, 40, 70, 5); // Parfait Style Glass
+    noStroke(); fill("#ffb6c1"); rect(-17, -35, 34, 60, 3); // Strawberry Core
+    fill(255); stroke("#6d4c41"); ellipse(0, -40, 40, 20); // Whipped Froth
+    fill("#e74c3c"); noStroke(); ellipse(0, -50, 12, 12); // Topping Cherry
+    stroke("#e74c3c"); strokeWeight(4); line(8, -40, 15, -60); // Red Straw
   }
   pop();
 }
 
 function touchStarted() {
-  if (gameState === "POP") { resetGame(); return false; }
+  if (gameState !== "PLAY") return false;
   if (dist(mouseX, mouseY, itemX, itemY) < 100) isDragging = true;
   return false;
 }
@@ -157,11 +334,11 @@ function touchEnded() {
   isDragging = false;
 
   if (itemX < width * 0.35) {
-    if (currentItem === "pancake") { score++; bunnySize += 35; spawnItem(); }
+    if (currentItem === "pancake") { updateScore(); bunnySize += 35; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (itemX > width * 0.65) {
-    if (currentItem === "milkshake") { score++; kittySize += 35; spawnItem(); }
+    if (currentItem === "milkshake") { updateScore(); kittySize += 35; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
@@ -181,11 +358,25 @@ function spawnItem() {
   currentItem = random(["pancake", "milkshake"]);
 }
 
+function updateScore() {
+  score++;
+  scoreDisplay.innerText = score;
+  
+  // Micro-interaction score bump animation
+  scoreBox.classList.add('bump');
+  setTimeout(() => scoreBox.classList.remove('bump'), 100);
+}
+
 function triggerPop(who) {
   gameState = "POP";
   let col = (who === "Bunny") ? "#f4d03f" : "#ffb6c1";
-  let px = (who === "Bunny") ? width * 0.2 : width * 0.8;
-  for (let i = 0; i < 80; i++) particles.push(new Particle(px, startY, col));
+  let px = (who === "Bunny") ? width * 0.22 : width * 0.78;
+  
+  for (let i = 0; i < 90; i++) particles.push(new Particle(px, startY, col));
+  
+  // Active UI Game Over State Display
+  finalScoreText.innerText = "Final Score: " + score;
+  gameoverScreen.classList.add('active');
 }
 
 function displayExplosion() {
@@ -194,25 +385,25 @@ function displayExplosion() {
     particles[i].display();
     if (particles[i].size < 0.1) particles.splice(i, 1);
   }
-  fill(255, 50, 50); textAlign(CENTER); textSize(width * 0.15);
-  text("BOOM!", width / 2, height / 2);
-  fill("#6d4c41"); textSize(20);
-  text("Final Score: " + score + "\nTap to restart", width/2, height/2 + 80);
 }
 
 function resetGame() {
-  score = 0; bunnySize = 120; kittySize = 120; particles = [];
-  gameState = "PLAY"; spawnItem();
+  score = 0;
+  scoreDisplay.innerText = score;
+  bunnySize = 120;
+  kittySize = 120;
+  particles = [];
+  gameoverScreen.classList.remove('active');
+  gameState = "PLAY"; 
+  spawnItem();
 }
 
-/** * ROTATION FIX: 
- * Ensures item stays centered when rotating screen
- */
+/** * LANDSCAPE MODE POSITIONING ENGINE FIXED */
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
-  startY = height * 0.6; 
+  startY = height * 0.62; 
   
-  // If we aren't dragging, reposition the item to the new center
+  // Re-orient current item coordinate maps instantly
   if (!isDragging) {
     itemX = width / 2;
     itemY = startY;
@@ -222,11 +413,11 @@ function windowResized() {
 class Particle {
   constructor(x, y, col) {
     this.x = x; this.y = y; this.col = col;
-    this.vx = random(-15, 15); this.vy = random(-20, 5);
-    this.gravity = 0.6; this.size = random(10, 30);
+    this.vx = random(-16, 16); this.vy = random(-22, 4);
+    this.gravity = 0.6; this.size = random(12, 36);
   }
-  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.96; }
-  display() { fill(this.col); noStroke(); ellipse(this.x, this.y, this.size); }
+  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.94; }
+  display() { fill(this.col); stroke("#6d4c41"); strokeWeight(2); ellipse(this.x, this.y, this.size); }
 }
 </script>
 </body>
