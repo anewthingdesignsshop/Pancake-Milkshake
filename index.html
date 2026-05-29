@@ -34,6 +34,7 @@
             width: 100vw;
         }
 
+        /* Fixed HTML UI HUD Container */
         #hud-container {
             position: absolute;
             top: 0;
@@ -41,11 +42,12 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 999;
+            z-index: 999; /* Higher priority than any canvas renders */
             display: flex;
             justify-content: center;
         }
 
+        /* HTML-Native Floating Score Card */
         .score-card {
             margin-top: calc(30px + env(safe-area-inset-top));
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 100%);
@@ -63,6 +65,7 @@
             height: 64px;
         }
 
+        /* Native CSS Hardware Accelerated Scale Jump Animation */
         .score-card.pop-bump {
             transform: scale(1.25) !important;
         }
@@ -74,15 +77,21 @@
             letter-spacing: 1px;
             line-height: 1;
             margin: 0;
+            padding: 0;
             text-align: center;
             width: 100%;
         }
 
+        /* End Game Overlays */
         .overlay {
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(255, 241, 214, 0.85); 
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -90,6 +99,7 @@
             pointer-events: none;
             transition: opacity 0.4s ease;
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .overlay.active {
@@ -104,18 +114,28 @@
             box-shadow: 0 20px 50px rgba(74, 46, 43, 0.15);
             text-align: center;
             border: 4px solid #4A2E2B;
+            max-width: 90%;
             width: 340px;
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .overlay.active .overlay-card {
+            transform: translateY(0);
         }
 
         .overlay h1 {
             color: #E29A86;
             font-size: 44px;
             margin: 0 0 12px 0;
+            font-weight: 700;
         }
 
         .overlay p {
             color: #4A2E2B;
             font-size: 18px;
+            margin: 0 0 30px 0;
+            font-weight: 600;
         }
 
         .btn-restart {
@@ -127,6 +147,14 @@
             font-weight: 700;
             border-radius: 25px;
             cursor: pointer;
+            box-shadow: 0 5px 0px #4A2E2B;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            pointer-events: auto;
+        }
+
+        .btn-restart:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0px #4A2E2B;
         }
 
         canvas {
@@ -134,24 +162,25 @@
             position: absolute;
             top: 0;
             left: 0;
+            z-index: 1;
         }
     </style>
 </head>
 <body>
 
-<div id="hud-container">
-    <div class="score-card" id="score-card-dom">
-        <h1 id="score-display-text">SCORE: 0</h1>
+    <div id="hud-container">
+        <div class="score-card" id="score-card-dom">
+            <h1 id="score-display-text">SCORE: 0</h1>
+        </div>
     </div>
-</div>
 
-<div id="gameover-screen" class="overlay">
-    <div class="overlay-card">
-        <h1>BOOM!</h1>
-        <p id="final-score-text">Final Score: 0</p>
-        <button class="btn-restart" id="restart-button">Play Again</button>
+    <div id="gameover-screen" class="overlay">
+        <div class="overlay-card">
+            <h1>BOOM!</h1>
+            <p id="final-score-text">Final Score: 0</p>
+            <button class="btn-restart" id="restart-button">Play Again</button>
+        </div>
     </div>
-</div>
 
 <script>
 let score = 0;
@@ -165,12 +194,14 @@ let particles = [];
 
 let bunnyX, kittyX;
 
+// DOM Selectors
 let scoreTextNode, scoreBoxNode, gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   updateLayout();
   
+  // Connect native layout markers
   scoreTextNode = document.getElementById('score-display-text');
   scoreBoxNode = document.getElementById('score-card-dom');
   gameoverScreen = document.getElementById('gameover-screen');
@@ -178,16 +209,13 @@ function setup() {
   
   restartButton = document.getElementById('restart-button');
   restartButton.addEventListener('click', resetGame);
-
+  restartButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    resetGame();
+  });
+  
   spawnItem();
 }
-
-/* LANDSCAPE FIX */
-window.addEventListener('orientationchange', () => {
-  setTimeout(() => {
-    windowResized();
-  }, 250);
-});
 
 function updateLayout() {
   startY = height * 0.70;
@@ -219,10 +247,317 @@ function displayGame() {
   let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < (bunnySize * 1.1));
   let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < (kittySize * 1.1));
 
+  // Characters
   drawChibiBunny(bunnyX, startY, bunnySize, bunnyHungry);
   drawChibiKitty(kittyX, startY, kittySize, kittyHungry);
 
+  // Active Food Object
   drawFood(itemX, itemY, currentItem, true);
 }
 
-/* KEEPING YOUR ORIGINAL DRAWING FUNCTIONS */
+// --- CURVED CHIBI FORM RENDERING ENGINE ---
+
+function drawChibiBunny(x, y, s, isOpen) {
+  push();
+  if (s > 250) translate(random(-1.5, 1.5), random(-1.5, 1.5)); 
+  translate(x, y);
+  
+  stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
+  
+  ellipse(-s*0.22, -s*0.52, s*0.16, s*0.58);
+  ellipse(s*0.22, -s*0.52, s*0.16, s*0.58);
+  
+  fill("#FCD2D1"); noStroke();
+  ellipse(-s*0.22, -s*0.52, s*0.08, s*0.48);
+  ellipse(s*0.22, -s*0.52, s*0.08, s*0.48);
+  
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
+  beginShape();
+  vertex(0, -s*0.25);
+  bezierVertex(s*0.32, -s*0.25, s*0.46, -s*0.08, s*0.46, s*0.06);   
+  bezierVertex(s*0.46, s*0.24, s*0.26, s*0.32, 0, s*0.32);         
+  bezierVertex(-s*0.26, s*0.32, -s*0.46, s*0.24, -s*0.46, s*0.06); 
+  bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   
+  endShape(CLOSE);
+  
+  ellipse(-s*0.08, s*0.18, s*0.07, s*0.09);
+  ellipse(s*0.08, s*0.18, s*0.07, s*0.09);
+
+  let dx = map(itemX, 0, width, -s/24, s/24);
+  let dy = map(itemY, 0, height, -s/32, s/32);
+  
+  fill("#3A2523"); noStroke();
+  ellipse(-s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
+  ellipse(s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
+  
+  fill(255);
+  ellipse(-s*0.22 + dx, s*0.01 + dy, s*0.045, s*0.045); 
+  ellipse(s*0.18 + dx, s*0.01 + dy, s*0.045, s*0.045);
+  ellipse(-s*0.16 + dx, s*0.06 + dy, s*0.02, s*0.02); 
+  ellipse(s*0.24 + dx, s*0.06 + dy, s*0.02, s*0.02);
+  
+  fill("rgba(242, 172, 162, 0.55)");
+  ellipse(-s*0.32, s*0.11, s*0.16, s*0.08);
+  ellipse(s*0.32, s*0.11, s*0.16, s*0.08);
+  
+  stroke("#4A2E2B"); strokeWeight(3.5); noFill();
+  if (isOpen) {
+    fill("#6C504B");
+    ellipse(0, s*0.10, s*0.12, s*0.12);
+  } else {
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+  }
+  
+  drawFoodPlate(0, s*0.25, s * 0.95);
+  pop();
+}
+
+function drawChibiKitty(x, y, s, isOpen) {
+  push();
+  if (s > 250) translate(random(-1.5, 1.5), random(-1.5, 1.5));
+  translate(x, y);
+  
+  stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
+  
+  beginShape();
+  vertex(s*0.35, s*0.1);
+  bezierVertex(s*0.55, s*0.15, s*0.65, -s*0.15, s*0.55, -s*0.15);
+  bezierVertex(s*0.48, -s*0.15, s*0.45, s*0.05, s*0.35, s*0.2);
+  endShape(CLOSE);
+  
+  fill("#D08D5B"); stroke("#4A2E2B");
+  rect(-s*0.42, -s*0.36, s*0.2, s*0.26, s*0.06);
+  fill("#FFFDF9");
+  rect(s*0.22, -s*0.36, s*0.2, s*0.26, s*0.06);
+  
+  fill("#FCD2D1"); noStroke();
+  ellipse(-s*0.32, -s*0.22, s*0.1, s*0.16);
+  ellipse(s*0.32, -s*0.22, s*0.1, s*0.16);
+  
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
+  beginShape();
+  vertex(0, -s*0.25);
+  bezierVertex(s*0.32, -s*0.25, s*0.46, -s*0.08, s*0.46, s*0.06); 
+  bezierVertex(s*0.46, s*0.24, s*0.26, s*0.32, 0, s*0.32);         
+  bezierVertex(-s*0.26, s*0.32, -s*0.46, s*0.24, -s*0.46, s*0.06); 
+  bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   
+  endShape(CLOSE);
+  
+  fill("#EAA86E"); noStroke();
+  beginShape();
+  vertex(-s*0.44, -s*0.05);
+  bezierVertex(-s*0.36, -s*0.02, -s*0.28, s*0.08, -s*0.30, s*0.16);
+  bezierVertex(-s*0.38, s*0.20, -s*0.46, s*0.12, -s*0.44, -s*0.05);
+  endShape(CLOSE);
+  
+  beginShape();
+  vertex(s*0.44, -s*0.05);
+  bezierVertex(s*0.36, -s*0.02, s*0.28, s*0.08, s*0.30, s*0.16);
+  bezierVertex(s*0.38, s*0.20, s*0.46, s*0.12, s*0.44, -s*0.05);
+  endShape(CLOSE);
+
+  let dx = map(itemX, 0, width, -s/22, s/22);
+  let dy = map(itemY, 0, height, -s/32, s/32);
+  
+  fill("#3A2523"); noStroke();
+  ellipse(-s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
+  ellipse(s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
+  
+  fill(255);
+  ellipse(-s*0.22 + dx, s*0.01 + dy, s*0.045, s*0.045); 
+  ellipse(s*0.18 + dx, s*0.01 + dy, s*0.045, s*0.045);
+  ellipse(-s*0.16 + dx, s*0.06 + dy, s*0.02, s*0.02); 
+  ellipse(s*0.24 + dx, s*0.06 + dy, s*0.02, s*0.02);
+  
+  stroke("#4A2E2B"); strokeWeight(3);
+  line(-s*0.44, s*0.06, -s*0.56, s*0.05);
+  line(-s*0.44, s*0.12, -s*0.58, s*0.14);
+  line(s*0.44, s*0.06, s*0.56, s*0.05);
+  line(s*0.44, s*0.12, s*0.58, s*0.14);
+  
+  fill("rgba(242, 172, 162, 0.55)"); noStroke();
+  ellipse(-s*0.32, s*0.11, s*0.16, s*0.08);
+  ellipse(s*0.32, s*0.11, s*0.16, s*0.08);
+  
+  stroke("#4A2E2B"); strokeWeight(3.5); noFill();
+  if (isOpen) {
+    fill("#6C504B");
+    ellipse(0, s*0.08, s*0.12, s*0.12);
+  } else {
+    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+  }
+  
+  drawFoodPlate(0, s*0.25, s * 0.95);
+  pop();
+}
+
+function drawFoodPlate(mx, my, pw) {
+  push();
+  translate(mx, my);
+  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
+  ellipse(0, 0, pw, pw * 0.28); 
+  fill("#ECE7E1"); noStroke();
+  ellipse(0, 0, pw * 0.85, pw * 0.22); 
+  stroke("#4A2E2B"); noFill(); strokeWeight(2);
+  ellipse(0, 0, pw * 0.85, pw * 0.22); 
+  pop();
+}
+
+function drawFood(x, y, type, hasPlate) {
+  push();
+  translate(x, y);
+  stroke("#4A2E2B"); strokeWeight(4.5);
+  
+  if (type === "pancake") {
+    if(hasPlate) drawFoodPlate(0, 15, 95);
+    
+    stroke("#4A2E2B"); fill("#F6D57F");
+    for(let i=0; i<3; i++) ellipse(0, i*4.5, 76, 24);
+    
+    fill("#E4985E"); noStroke(); 
+    ellipse(0, -3, 54, 15);
+    stroke("#4A2E2B"); fill("#E4985E"); strokeWeight(3.5);
+    rect(-20, -3, 8, 12, 4);
+    rect(12, -3, 6, 10, 3);
+    
+    fill("#FFF199"); stroke("#4A2E2B"); strokeWeight(3.5); 
+    rect(-10, -16, 20, 12, 3);
+  } else {
+    if(hasPlate) drawFoodPlate(0, 15, 95);
+    
+    fill("rgba(255, 255, 255, 0.5)"); rect(-20, -38, 40, 68, 8);
+    noStroke(); fill("#FBC3C3"); rect(-17, -34, 34, 58, 5);
+    
+    fill("#FFFDF9"); stroke("#4A2E2B"); strokeWeight(3.5);
+    ellipse(0, -38, 42, 18);
+    ellipse(0, -47, 26, 14);
+    
+    fill("#E27D73"); stroke("#4A2E2B"); strokeWeight(2.5);
+    ellipse(-2, -54, 14, 14);
+    noFill(); stroke("#4A2E2B"); strokeWeight(2);
+    arc(4, -62, 12, 10, PI, TWO_PI - HALF_PI); 
+    
+    stroke("#E27D73"); strokeWeight(4.5); line(10, -38, 18, -58);
+  }
+  pop();
+}
+
+// --- INTERACTIVE ENGINE LOGIC LAYER ---
+
+function touchStarted() {
+  if (gameState !== "PLAY") return false;
+  if (dist(mouseX, mouseY, itemX, itemY) < 100) isDragging = true;
+  return false;
+}
+
+function touchEnded() {
+  if (!isDragging) return false;
+  isDragging = false;
+
+  let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
+  let distanceToKitty = dist(itemX, itemY, kittyX, startY);
+
+  let bunnyTargetRadius = bunnySize * 0.75;
+  let kittyTargetRadius = kittySize * 0.75;
+
+  if (distanceToBunny < bunnyTargetRadius) {
+    if (currentItem === "pancake") { updateScoreDOM(); bunnySize += 8; spawnItem(); }
+    else { triggerPop("Bunny"); }
+  } 
+  else if (distanceToKitty < kittyTargetRadius) {
+    if (currentItem === "milkshake") { updateScoreDOM(); kittySize += 8; spawnItem(); }
+    else { triggerPop("Kitty"); }
+  } 
+  else { 
+    itemX = width / 2; itemY = startY; 
+  }
+
+  if (bunnySize > 300 || kittySize > 300) triggerPop(bunnySize > 300 ? "Bunny" : "Kitty");
+  return false;
+}
+
+function mousePressed() { touchStarted(); }
+function mouseReleased() { touchEnded(); }
+
+function spawnItem() {
+  itemX = width / 2;
+  itemY = startY;
+  currentItem = random(["pancake", "milkshake"]);
+}
+
+// Direct, unblocked pipeline updates score text and triggers CSS animation smoothly
+function updateScoreDOM() {
+  score++;
+  
+  if (scoreTextNode) {
+    scoreTextNode.innerText = "SCORE: " + score;
+  }
+  
+  if (scoreBoxNode) {
+    scoreBoxNode.classList.remove('pop-bump');
+    void scoreBoxNode.offsetWidth; // Forces CSS engine layout computation to allow animation re-triggering
+    scoreBoxNode.classList.add('pop-bump');
+    setTimeout(() => {
+      if (scoreBoxNode) scoreBoxNode.classList.remove('pop-bump');
+    }, 120);
+  }
+}
+
+function triggerPop(who) {
+  gameState = "POP";
+  isDragging = false;
+  
+  let col = (who === "Bunny") ? "#F6D57F" : "#FBC3C3";
+  let px = (who === "Bunny") ? bunnyX : kittyX;
+  
+  for (let i = 0; i < 90; i++) particles.push(new Particle(px, startY, col));
+  
+  finalScoreText.innerText = "Final Score: " + score;
+  gameoverScreen.classList.add('active');
+}
+
+function displayExplosion() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].display();
+    if (particles[i].size < 0.1) particles.splice(i, 1);
+  }
+}
+
+function resetGame() {
+  score = 0;
+  if (scoreTextNode) {
+    scoreTextNode.innerText = "SCORE: 0";
+  }
+  bunnySize = 135;
+  kittySize = 135;
+  particles = [];
+  gameoverScreen.classList.remove('active');
+  gameState = "PLAY"; 
+  spawnItem();
+}
+
+function windowResized() { 
+  resizeCanvas(windowWidth, windowHeight); 
+  updateLayout();
+  
+  if (!isDragging) {
+    itemX = width / 2;
+    itemY = startY;
+  }
+}
+
+class Particle {
+  constructor(x, y, col) {
+    this.x = x; this.y = y; this.col = col;
+    this.vx = random(-14, 14); this.vy = random(-20, 3);
+    this.gravity = 0.55; this.size = random(10, 32);
+  }
+  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
+  display() { fill(this.col); stroke("#4A2E2B"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
+}
+</script>
+</body>
+</html>
