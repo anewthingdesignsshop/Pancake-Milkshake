@@ -11,7 +11,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     
@@ -27,81 +27,82 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            background: linear-gradient(180deg, #ffedd5 0%, #fdf5e6 100%); 
+            background: linear-gradient(180deg, #FFFDF9 0%, #FBF6EE 100%); 
             touch-action: none;
             font-family: 'Fredoka', sans-serif;
             height: 100vh;
             width: 100vw;
         }
 
-        /* Modern Glassmorphism HUD Interface */
+        /* Elevated Glassmorphism HUD */
         #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Let clicks pass through to p5 canvas */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
-            zIndex: 10;
+            padding: calc(30px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+            z-index: 10;
         }
 
         .score-container {
             align-self: center;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 10px 30px;
-            border-radius: 50px;
-            box-shadow: 0 8px 32px 0 rgba(109, 76, 65, 0.15);
-            border: 3px solid #6d4c41;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 35px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(152, 172, 156, 0.2);
+            border: 2px solid #98AC9C;
             transform: scale(1);
-            transition: transform 0.1s ease;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: auto;
         }
 
         .score-container.bump {
-            transform: scale(1.2);
+            transform: scale(1.15);
         }
 
         #score-label {
-            font-size: 14px;
-            color: #8d6e63;
+            font-size: 13px;
+            color: #98AC9C;
             text-transform: uppercase;
             font-weight: 700;
             letter-spacing: 2px;
             text-align: center;
-            margin-bottom: -2px;
+            margin-bottom: 2px;
         }
 
         #score-display {
-            font-size: 42px;
-            color: #5d4037;
+            font-size: 38px;
+            color: #4A564E;
             font-weight: 700;
             text-align: center;
             line-height: 1;
         }
 
-        /* Overlay Screens (Game Over / Start) */
+        /* Whimsical Overlay Screens */
         .overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 107, 107, 0.95);
+            background: rgba(251, 246, 238, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            zIndex: 20;
+            z-index: 20;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
-            backdrop-filter: blur(5px);
+            transition: opacity 0.4s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .overlay.active {
@@ -110,46 +111,52 @@
         }
 
         .overlay-card {
-            background: white;
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            background: #FFFFFF;
+            padding: 40px 30px;
+            border-radius: 32px;
+            box-shadow: 0 20px 50px rgba(152, 172, 156, 0.15);
             text-align: center;
-            border: 4px solid #6d4c41;
+            border: 2px solid #98AC9C;
             max-width: 90%;
-            width: 320px;
+            width: 340px;
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .overlay.active .overlay-card {
+            transform: translateY(0);
         }
 
         .overlay h1 {
-            color: #ff4757;
-            font-size: 48px;
-            margin: 0 0 10px 0;
-            text-shadow: 2px 2px 0px #f1f2f6;
+            color: #E29A86;
+            font-size: 44px;
+            margin: 0 0 12px 0;
+            font-weight: 700;
         }
 
         .overlay p {
-            color: #5d4037;
+            color: #6C7A70;
             font-size: 18px;
-            margin: 0 0 25px 0;
-            font-weight: 700;
+            margin: 0 0 30px 0;
+            font-weight: 600;
         }
 
         .btn-restart {
-            background: #4cd137;
-            color: white;
-            border: 3px solid #6d4c41;
-            padding: 12px 30px;
-            font-size: 20px;
+            background: #98AC9C;
+            color: #FFFFFF;
+            border: none;
+            padding: 14px 40px;
+            font-size: 18px;
             font-weight: 700;
-            border-radius: 50px;
+            border-radius: 25px;
             cursor: pointer;
-            box-shadow: 0 6px 0px #6d4c41;
-            transition: transform 0.1s ease;
+            box-shadow: 0 5px 15px rgba(152, 172, 156, 0.3);
+            transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
         .btn-restart:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0px #6d4c41;
+            transform: scale(0.97);
+            background-color: #839687;
         }
 
         canvas {
@@ -157,7 +164,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            zIndex: 1;
+            z-index: 1;
         }
     </style>
 </head>
@@ -168,7 +175,8 @@
             <div id="score-label">Score</div>
             <div id="score-display">0</div>
         </div>
-        <div></div> </div>
+        <div></div>
+    </div>
 
     <div id="gameover-screen" class="overlay">
         <div class="overlay-card">
@@ -179,24 +187,22 @@
     </div>
 
 <script>
-/** * GAME VARIABLES */
 let score = 0;
 let itemX, itemY, startY;
 let currentItem = "";
 let isDragging = false;
-let bunnySize = 120;
-let kittySize = 120;
+let bunnySize = 130;
+let kittySize = 130;
 let gameState = "PLAY"; 
 let particles = [];
 
-// DOM Element Selectors
+// DOM Reference Elements
 let scoreDisplay, scoreBox, gameoverScreen, finalScoreText;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  startY = height * 0.62; 
+  startY = height * 0.65; 
   
-  // Link Javascript variables to HTML Interface elements
   scoreDisplay = document.getElementById('score-display');
   scoreBox = document.getElementById('score-box');
   gameoverScreen = document.getElementById('gameover-screen');
@@ -206,15 +212,15 @@ function setup() {
 }
 
 function draw() {
-  clear(); // Keeps canvas clear so background CSS gradient shines through
+  clear(); // Leaves workspace transparent so CSS background gradient works
   
-  // 1. Draw Table/Environment Platform
+  // Whimsical Ground/Table Base
   noStroke();
-  fill("rgba(224, 201, 166, 0.95)"); 
-  rect(0, startY + 45, width, height - startY);
-  stroke("#6d4c41"); 
-  strokeWeight(5); 
-  line(0, startY + 45, width, startY + 45);
+  fill("#F7F1E5"); 
+  rect(0, startY + 50, width, height - startY);
+  stroke("#EAE2D2"); 
+  strokeWeight(3); 
+  line(0, startY + 50, width, startY + 50);
 
   if (gameState === "PLAY") {
     displayGame();
@@ -229,99 +235,161 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  // Hunger Look-Ahead Range Checks
-  let bunnyHungry = (isDragging && itemX < width * 0.45);
-  let kittyHungry = (isDragging && itemX > width * 0.55);
+  // Smooth anticipation flags based on proximity layout ratios
+  let bunnyHungry = (isDragging && itemX < width * 0.42);
+  let kittyHungry = (isDragging && itemX > width * 0.58);
 
   // Characters
   drawChibiBunny(width * 0.22, startY, bunnySize, bunnyHungry);
   drawChibiKitty(width * 0.78, startY, kittySize, kittyHungry);
 
-  // Sorting Object
+  // Sorting Food Entity
   drawFood(itemX, itemY, currentItem);
 }
 
+// --- ULTRA-CHIBI CHARACTERS ---
+
 function drawChibiBunny(x, y, s, isOpen) {
   push();
-  if (s > 300) translate(random(-2, 2), random(-2, 2)); 
+  if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5)); // Shaking physics
   translate(x, y);
   
-  fill(255); stroke("#6d4c41"); strokeWeight(4);
-  ellipse(-s/4, -s/1.5, s/3.8, s/1.3); 
-  ellipse(s/4, -s/1.5, s/3.8, s/1.3);
-  ellipse(0, 0, s, s * 1.1);
+  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
   
-  let dx = map(itemX, 0, width, -s/18, s/18);
-  let dy = map(itemY, 0, height, -s/28, s/28);
-  fill("#2d3436"); noStroke();
-  ellipse(-s/4 + dx, -s/10 + dy, s/9, s/7.2); 
-  ellipse(s/4 + dx, -s/10 + dy, s/9, s/7.2);
+  // Whimsical floppy ears setup
+  ellipse(-s/4, -s/1.6, s/3.8, s/1.2);
+  ellipse(s/4, -s/1.6, s/3.8, s/1.2);
   
-  // Pink Cheeks
-  fill("rgba(255, 165, 175, 0.6)");
-  ellipse(-s/3, s/15, s/4, s/8);
-  ellipse(s/3, s/15, s/4, s/8);
+  // Ear inners
+  fill("#FCE5E3"); noStroke();
+  ellipse(-s/4, -s/1.6, s/7, s/1.5);
+  ellipse(s/4, -s/1.6, s/7, s/1.5);
   
+  // Chibi Body
+  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
+  ellipse(0, 0, s, s * 0.95);
+  
+  // Dynamic Eye-Tracking calculations
+  let dx = map(itemX, 0, width, -s/22, s/22);
+  let dy = map(itemY, 0, height, -s/32, s/32);
+  
+  // Beady eyes + catchlights
+  fill("#3A423D"); noStroke();
+  ellipse(-s/4 + dx, -s/20 + dy, s/8, s/8);
+  ellipse(s/4 + dx, -s/20 + dy, s/8, s/8);
+  fill(255);
+  ellipse(-s/3.6 + dx, -s/16 + dy, s/22, s/22);
+  ellipse(s/3.6 + dx, -s/16 + dy, s/22, s/22);
+  
+  // Soft pastel blushing cheeks
+  fill("rgba(252, 229, 227, 0.85)");
+  ellipse(-s/3.2, s/12, s/4, s/8);
+  ellipse(s/3.2, s/12, s/4, s/8);
+  
+  // Mouth logic transitions
   if (isOpen) {
-    fill("#5d4037"); stroke("#6d4c41");
-    ellipse(0, s/6, s/3.5, s/2.5);
+    fill("#6C504B"); stroke("#5C665E"); strokeWeight(3);
+    ellipse(0, s/12, s/5, s/4);
   } else {
-    noFill(); stroke("#6d4c41");
-    arc(0, s/8, s/5, s/10, 0, PI);
+    noFill(); stroke("#5C665E"); strokeWeight(3);
+    arc(-s/30, s/12, s/12, s/12, 0, PI);
+    arc(s/30, s/12, s/12, s/12, 0, PI);
   }
   pop();
 }
 
 function drawChibiKitty(x, y, s, isOpen) {
   push();
-  if (s > 300) translate(random(-2, 2), random(-2, 2));
+  if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5));
   translate(x, y);
   
-  fill(235); stroke("#6d4c41"); strokeWeight(4);
-  triangle(-s/2, -s/3, -s/3.5, -s/1.8, -s/8, -s/3);
-  triangle(s/2, -s/3, s/3.5, -s/1.8, s/8, -s/3);
-  ellipse(0, 0, s * 1.1, s);
+  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
   
-  let dx = map(itemX, 0, width, -s/18, s/18);
-  let dy = map(itemY, 0, height, -s/28, s/28);
-  fill("#2d3436"); noStroke();
-  ellipse(-s/4 + dx, 0 + dy, s/9, s/7.2); 
-  ellipse(s/4 + dx, 0 + dy, s/9, s/7.2);
+  // Chibi Pointed Ears
+  triangle(-s/2, -s/6, -s/2.4, -s/1.6, -s/6, -s/6);
+  triangle(s/2, -s/6, s/2.4, -s/1.6, s/6, -s/6);
   
-  // Pink Cheeks
-  fill("rgba(255, 165, 175, 0.6)");
-  ellipse(-s/2.8, s/6, s/4, s/8);
-  ellipse(s/2.8, s/6, s/4, s/8);
+  // Ear Inners
+  fill("#FCE5E3"); noStroke();
+  triangle(-s/2.2, -s/5, -s/2.4, -s/1.8, -s/5, -s/5);
+  triangle(s/2.2, -s/5, s/2.4, -s/1.8, s/5, -s/5);
   
+  // Chibi Body squat base
+  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
+  ellipse(0, 0, s * 1.05, s * 0.9);
+  
+  // Eye tracking configuration
+  let dx = map(itemX, 0, width, -s/22, s/22);
+  let dy = map(itemY, 0, height, -s/32, s/32);
+  
+  // Beady eyes + catchlights
+  fill("#3A423D"); noStroke();
+  ellipse(-s/4 + dx, -s/20 + dy, s/8, s/8);
+  ellipse(s/4 + dx, -s/20 + dy, s/8, s/8);
+  fill(255);
+  ellipse(-s/3.6 + dx, -s/16 + dy, s/22, s/22);
+  ellipse(s/3.6 + dx, -s/16 + dy, s/22, s/22);
+  
+  // Soft blushing cheeks
+  fill("rgba(252, 229, 227, 0.85)");
+  ellipse(-s/3, s/10, s/4, s/8);
+  ellipse(s/3, s/10, s/4, s/8);
+  
+  // Mouth configuration
   if (isOpen) {
-    fill("#5d4037"); stroke("#6d4c41");
-    ellipse(0, s/6, s/2.5, s/3.5);
+    fill("#6C504B"); stroke("#5C665E"); strokeWeight(3);
+    ellipse(0, s/10, s/4, s/5);
   } else {
-    stroke("#6d4c41"); line(-s/10, s/8, s/10, s/8);
+    noFill(); stroke("#5C665E"); strokeWeight(3);
+    arc(-s/30, s/10, s/12, s/12, 0, PI);
+    arc(s/30, s/10, s/12, s/12, 0, PI);
   }
   pop();
 }
 
+// --- DELICIOUS & CUTE FOOD ENTITIES ---
+
 function drawFood(x, y, type) {
   push();
   translate(x, y);
-  stroke("#6d4c41"); strokeWeight(3);
+  stroke("#5C665E"); strokeWeight(3);
+  
   if (type === "pancake") {
-    fill(245); ellipse(0, 15, 80, 25); // Plate
-    fill("#f4d03f");
-    for(let i=0; i<3; i++) ellipse(0, i*4, 65, 20); // Pancake Layer Stack
-    fill("#d35400"); noStroke(); ellipse(0, -5, 40, 10); // Syrup Drizzle
-    fill("#ffeb3b"); stroke("#6d4c41"); rect(-8, -16, 16, 10, 2); // Butter Slice
+    // Aesthetic ceramic plate base
+    fill("#FBFBFA"); ellipse(0, 15, 82, 24);
+    
+    // Golden pancakes stack loop
+    fill("#F6D57F");
+    for(let i=0; i<3; i++) ellipse(0, i*4, 66, 20);
+    
+    // Rich syrup splash overlay
+    fill("#E4985E"); noStroke(); ellipse(0, -4, 44, 12);
+    
+    // Melting creamy butter pad
+    fill("#FFF199"); stroke("#5C665E"); strokeWeight(2.5); 
+    rect(-8, -15, 16, 10, 3);
   } else {
-    fill("rgba(255, 255, 255, 0.6)");
-    rect(-20, -40, 40, 70, 5); // Parfait Style Glass
-    noStroke(); fill("#ffb6c1"); rect(-17, -35, 34, 60, 3); // Strawberry Core
-    fill(255); stroke("#6d4c41"); ellipse(0, -40, 40, 20); // Whipped Froth
-    fill("#e74c3c"); noStroke(); ellipse(0, -50, 12, 12); // Topping Cherry
-    stroke("#e74c3c"); strokeWeight(4); line(8, -40, 15, -60); // Red Straw
+    // Elegant sundae clear glass vessel
+    fill("rgba(255, 255, 255, 0.5)"); rect(-18, -38, 36, 68, 6);
+    
+    // Premium pastel pink strawberry wash core
+    noStroke(); fill("#FBC3C3"); rect(-15, -34, 30, 58, 4);
+    
+    // Soft whipping fluff peaks
+    fill("#FFFDF9"); stroke("#5C665E"); strokeWeight(2.5);
+    ellipse(0, -38, 38, 18);
+    ellipse(0, -46, 24, 14);
+    
+    // Tiny topper glossy cherry
+    fill("#E27D73"); noStroke(); ellipse(0, -52, 12, 12);
+    
+    // Straw
+    stroke("#E27D73"); strokeWeight(3.5); line(6, -38, 14, -58);
   }
   pop();
 }
+
+// --- INTERACTIVE ENGINE LOGIC ---
 
 function touchStarted() {
   if (gameState !== "PLAY") return false;
@@ -334,18 +402,18 @@ function touchEnded() {
   isDragging = false;
 
   if (itemX < width * 0.35) {
-    if (currentItem === "pancake") { updateScore(); bunnySize += 35; spawnItem(); }
+    if (currentItem === "pancake") { updateScore(); bunnySize += 30; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (itemX > width * 0.65) {
-    if (currentItem === "milkshake") { updateScore(); kittySize += 35; spawnItem(); }
+    if (currentItem === "milkshake") { updateScore(); kittySize += 30; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
     itemX = width / 2; itemY = startY; 
   }
 
-  if (bunnySize > 450 || kittySize > 450) triggerPop(bunnySize > 450 ? "Bunny" : "Kitty");
+  if (bunnySize > 420 || kittySize > 420) triggerPop(bunnySize > 420 ? "Bunny" : "Kitty");
   return false;
 }
 
@@ -362,19 +430,18 @@ function updateScore() {
   score++;
   scoreDisplay.innerText = score;
   
-  // Micro-interaction score bump animation
+  // Trigger DOM CSS keyframe response link safely
   scoreBox.classList.add('bump');
-  setTimeout(() => scoreBox.classList.remove('bump'), 100);
+  setTimeout(() => scoreBox.classList.remove('bump'), 120);
 }
 
 function triggerPop(who) {
   gameState = "POP";
-  let col = (who === "Bunny") ? "#f4d03f" : "#ffb6c1";
+  let col = (who === "Bunny") ? "#F6D57F" : "#FBC3C3";
   let px = (who === "Bunny") ? width * 0.22 : width * 0.78;
   
   for (let i = 0; i < 90; i++) particles.push(new Particle(px, startY, col));
   
-  // Active UI Game Over State Display
   finalScoreText.innerText = "Final Score: " + score;
   gameoverScreen.classList.add('active');
 }
@@ -390,20 +457,18 @@ function displayExplosion() {
 function resetGame() {
   score = 0;
   scoreDisplay.innerText = score;
-  bunnySize = 120;
-  kittySize = 120;
+  bunnySize = 130;
+  kittySize = 130;
   particles = [];
   gameoverScreen.classList.remove('active');
   gameState = "PLAY"; 
   spawnItem();
 }
 
-/** * LANDSCAPE MODE POSITIONING ENGINE FIXED */
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
-  startY = height * 0.62; 
+  startY = height * 0.65; 
   
-  // Re-orient current item coordinate maps instantly
   if (!isDragging) {
     itemX = width / 2;
     itemY = startY;
@@ -413,11 +478,11 @@ function windowResized() {
 class Particle {
   constructor(x, y, col) {
     this.x = x; this.y = y; this.col = col;
-    this.vx = random(-16, 16); this.vy = random(-22, 4);
-    this.gravity = 0.6; this.size = random(12, 36);
+    this.vx = random(-14, 14); this.vy = random(-20, 3);
+    this.gravity = 0.55; this.size = random(10, 32);
   }
-  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.94; }
-  display() { fill(this.col); stroke("#6d4c41"); strokeWeight(2); ellipse(this.x, this.y, this.size); }
+  update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
+  display() { fill(this.col); stroke("#5C665E"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
 }
 </script>
 </body>
