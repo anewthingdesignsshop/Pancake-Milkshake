@@ -11,7 +11,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     
@@ -27,14 +27,14 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            background: linear-gradient(180deg, #FFFDF9 0%, #FBF6EE 100%); 
+            background: linear-gradient(180deg, #FFF0D3 0%, #FADCA6 100%); /* Exact image background match */
             touch-action: none;
             font-family: 'Fredoka', sans-serif;
             height: 100vh;
             width: 100vw;
         }
 
-        /* Elevated Glassmorphism HUD */
+        /* Glossy Floating Score Header */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -45,44 +45,46 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: calc(30px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+            padding: calc(40px + env(safe-area-inset-top)) 20px 20px 20px;
             z-index: 10;
         }
 
         .score-container {
             align-self: center;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 12px 35px;
-            border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(152, 172, 156, 0.2);
-            border: 2px solid #98AC9C;
+            background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 60px;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 10px 25px rgba(74, 46, 43, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             transform: scale(1);
             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle gloss highlight across the scoreboard */
+        .score-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background: rgba(255,255,255,0.3);
+            pointer-events: none;
         }
 
         .score-container.bump {
             transform: scale(1.15);
         }
 
-        #score-label {
-            font-size: 13px;
-            color: #98AC9C;
-            text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-align: center;
-            margin-bottom: 2px;
-        }
-
         #score-display {
-            font-size: 38px;
-            color: #4A564E;
+            font-size: 34px;
+            color: #4A2E2B; /* Deep warm brown text */
             font-weight: 700;
             text-align: center;
-            line-height: 1;
+            line-height: 1.2;
+            letter-spacing: 1px;
         }
 
         /* Whimsical Overlay Screens */
@@ -92,7 +94,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(251, 246, 238, 0.95);
+            background: rgba(255, 240, 211, 0.85); 
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -114,9 +116,9 @@
             background: #FFFFFF;
             padding: 40px 30px;
             border-radius: 32px;
-            box-shadow: 0 20px 50px rgba(152, 172, 156, 0.15);
+            box-shadow: 0 20px 50px rgba(74, 46, 43, 0.15);
             text-align: center;
-            border: 2px solid #98AC9C;
+            border: 4px solid #4A2E2B;
             max-width: 90%;
             width: 340px;
             transform: translateY(20px);
@@ -135,28 +137,29 @@
         }
 
         .overlay p {
-            color: #6C7A70;
+            color: #4A2E2B;
             font-size: 18px;
             margin: 0 0 30px 0;
             font-weight: 600;
         }
 
         .btn-restart {
-            background: #98AC9C;
+            background: #E29A86;
             color: #FFFFFF;
-            border: none;
+            border: 3px solid #4A2E2B;
             padding: 14px 40px;
             font-size: 18px;
             font-weight: 700;
             border-radius: 25px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(152, 172, 156, 0.3);
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 5px 0px #4A2E2B;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            pointer-events: auto;
         }
 
         .btn-restart:active {
-            transform: scale(0.97);
-            background-color: #839687;
+            transform: translateY(4px);
+            box-shadow: 0 1px 0px #4A2E2B;
         }
 
         canvas {
@@ -172,17 +175,15 @@
 
     <div id="ui-layer">
         <div class="score-container" id="score-box">
-            <div id="score-label">Score</div>
-            <div id="score-display">0</div>
+            <div id="score-display">SCORE: 0</div>
         </div>
-        <div></div>
     </div>
 
     <div id="gameover-screen" class="overlay">
         <div class="overlay-card">
             <h1>BOOM!</h1>
             <p id="final-score-text">Final Score: 0</p>
-            <button class="btn-restart" onclick="resetGame()">Play Again</button>
+            <button class="btn-restart" id="restart-button">Play Again</button>
         </div>
     </div>
 
@@ -191,36 +192,36 @@ let score = 0;
 let itemX, itemY, startY;
 let currentItem = "";
 let isDragging = false;
-let bunnySize = 130;
-let kittySize = 130;
+let bunnySize = 120;
+let kittySize = 120;
 let gameState = "PLAY"; 
 let particles = [];
 
 // DOM Reference Elements
-let scoreDisplay, scoreBox, gameoverScreen, finalScoreText;
+let scoreDisplay, scoreBox, gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  startY = height * 0.65; 
+  startY = height * 0.68; // Anchors characters beautifully low on screen
   
   scoreDisplay = document.getElementById('score-display');
   scoreBox = document.getElementById('score-box');
   gameoverScreen = document.getElementById('gameover-screen');
   finalScoreText = document.getElementById('final-score-text');
   
+  // Clean event bindings to resolve the 'Play Again' action layer blocking bug
+  restartButton = document.getElementById('restart-button');
+  restartButton.addEventListener('click', resetGame);
+  restartButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    resetGame();
+  });
+  
   spawnItem();
 }
 
 function draw() {
-  clear(); // Leaves workspace transparent so CSS background gradient works
-  
-  // Whimsical Ground/Table Base
-  noStroke();
-  fill("#F7F1E5"); 
-  rect(0, startY + 50, width, height - startY);
-  stroke("#EAE2D2"); 
-  strokeWeight(3); 
-  line(0, startY + 50, width, startY + 50);
+  clear(); // Ensures canvas background remains clear to show the CSS gradient smoothly
 
   if (gameState === "PLAY") {
     displayGame();
@@ -235,66 +236,73 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  // Smooth anticipation flags based on proximity layout ratios
   let bunnyHungry = (isDragging && itemX < width * 0.42);
   let kittyHungry = (isDragging && itemX > width * 0.58);
 
-  // Characters
+  // Render Left & Right Characters
   drawChibiBunny(width * 0.22, startY, bunnySize, bunnyHungry);
   drawChibiKitty(width * 0.78, startY, kittySize, kittyHungry);
 
-  // Sorting Food Entity
-  drawFood(itemX, itemY, currentItem);
+  // Active Center Sorting Food Entity
+  drawFood(itemX, itemY, currentItem, true);
 }
 
-// --- ULTRA-CHIBI CHARACTERS ---
+// --- ULTRA-CHIBI ILLUSTRATION RENDERING ENGINE ---
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
-  if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5)); // Shaking physics
+  if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5)); 
   translate(x, y);
   
-  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
+  stroke("#4A2E2B"); strokeWeight(4); fill("#FFFDF9");
   
-  // Whimsical floppy ears setup
-  ellipse(-s/4, -s/1.6, s/3.8, s/1.2);
-  ellipse(s/4, -s/1.6, s/3.8, s/1.2);
+  // Bunny ears
+  ellipse(-s/4, -s/1.5, s/3.8, s/1.1);
+  ellipse(s/4, -s/1.5, s/3.8, s/1.1);
   
-  // Ear inners
-  fill("#FCE5E3"); noStroke();
-  ellipse(-s/4, -s/1.6, s/7, s/1.5);
-  ellipse(s/4, -s/1.6, s/7, s/1.5);
+  // Ear inners pink
+  fill("#FBCBC9"); noStroke();
+  ellipse(-s/4, -s/1.5, s/8, s/1.3);
+  ellipse(s/4, -s/1.5, s/8, s/1.3);
   
-  // Chibi Body
-  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
+  // Body Round
+  stroke("#4A2E2B"); strokeWeight(4); fill("#FFFDF9");
   ellipse(0, 0, s, s * 0.95);
   
-  // Dynamic Eye-Tracking calculations
+  // Paws
+  ellipse(-s/4, s/3, s/4, s/5);
+  ellipse(s/4, s/3, s/4, s/5);
+  
   let dx = map(itemX, 0, width, -s/22, s/22);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Beady eyes + catchlights
-  fill("#3A423D"); noStroke();
-  ellipse(-s/4 + dx, -s/20 + dy, s/8, s/8);
-  ellipse(s/4 + dx, -s/20 + dy, s/8, s/8);
+  // Premium Sparkle Eyes
+  fill("#3A2523"); noStroke();
+  ellipse(-s/4 + dx, -s/20 + dy, s/7, s/7);
+  ellipse(s/4 + dx, -s/20 + dy, s/7, s/7);
   fill(255);
-  ellipse(-s/3.6 + dx, -s/16 + dy, s/22, s/22);
-  ellipse(s/3.6 + dx, -s/16 + dy, s/22, s/22);
+  ellipse(-s/3.6 + dx, -s/16 + dy, s/18, s/18); // Sparkle 1
+  ellipse(s/3.6 + dx, -s/16 + dy, s/18, s/18);
+  ellipse(-s/4.5 + dx, -s/26 + dy, s/35, s/35); // Sparkle 2
+  ellipse(s/4.5 + dx, -s/26 + dy, s/35, s/35);
   
-  // Soft pastel blushing cheeks
-  fill("rgba(252, 229, 227, 0.85)");
-  ellipse(-s/3.2, s/12, s/4, s/8);
-  ellipse(s/3.2, s/12, s/4, s/8);
+  // Soft blushing cheeks
+  fill("rgba(240, 166, 155, 0.5)");
+  ellipse(-s/3.2, s/12, s/4, s/9);
+  ellipse(s/3.2, s/12, s/4, s/9);
   
-  // Mouth logic transitions
+  // Mouth
   if (isOpen) {
-    fill("#6C504B"); stroke("#5C665E"); strokeWeight(3);
+    fill("#6C504B"); stroke("#4A2E2B"); strokeWeight(3);
     ellipse(0, s/12, s/5, s/4);
   } else {
-    noFill(); stroke("#5C665E"); strokeWeight(3);
+    noFill(); stroke("#4A2E2B"); strokeWeight(3);
     arc(-s/30, s/12, s/12, s/12, 0, PI);
     arc(s/30, s/12, s/12, s/12, 0, PI);
   }
+  
+  // Static Decorative Character Plate
+  drawFoodPlate(0, s/2.6, s * 0.9);
   pop();
 }
 
@@ -303,93 +311,129 @@ function drawChibiKitty(x, y, s, isOpen) {
   if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5));
   translate(x, y);
   
-  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
+  stroke("#4A2E2B"); strokeWeight(4); fill("#FFFDF9");
   
-  // Chibi Pointed Ears
+  // Tail
+  stroke("#4A2E2B"); fill("#EAA86E");
+  rect(s/2.5, 0, s/5, s/2, 10);
+  
+  // Kitty Ears
+  fill("#EAA86E"); stroke("#4A2E2B");
   triangle(-s/2, -s/6, -s/2.4, -s/1.6, -s/6, -s/6);
+  fill("#FFFDF9");
   triangle(s/2, -s/6, s/2.4, -s/1.6, s/6, -s/6);
   
-  // Ear Inners
-  fill("#FCE5E3"); noStroke();
-  triangle(-s/2.2, -s/5, -s/2.4, -s/1.8, -s/5, -s/5);
-  triangle(s/2.2, -s/5, s/2.4, -s/1.8, s/5, -s/5);
+  // Ear Inners Pink
+  fill("#FBCBC9"); noStroke();
+  triangle(-s/2.2, -s/5, -s/2.4, -s/1.5, -s/5, -s/5);
+  triangle(s/2.2, -s/5, s/2.4, -s/1.5, s/5, -s/5);
   
-  // Chibi Body squat base
-  stroke("#5C665E"); strokeWeight(3.5); fill("#FFFDF9");
+  // Body squat
+  stroke("#4A2E2B"); strokeWeight(4); fill("#FFFDF9");
   ellipse(0, 0, s * 1.05, s * 0.9);
   
-  // Eye tracking configuration
+  // Ginger Patch Top Corner
+  fill("#EAA86E"); noStroke();
+  arc(s/4, -s/4, s/2, s/2, HALF_PI, PI + HALF_PI);
+  
+  // Paws
+  stroke("#4A2E2B"); fill("#FFFDF9");
+  ellipse(-s/4, s/3.2, s/4, s/5);
+  ellipse(s/4, s/3.2, s/4, s/5);
+  
   let dx = map(itemX, 0, width, -s/22, s/22);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Beady eyes + catchlights
-  fill("#3A423D"); noStroke();
-  ellipse(-s/4 + dx, -s/20 + dy, s/8, s/8);
-  ellipse(s/4 + dx, -s/20 + dy, s/8, s/8);
+  // Eyes with Multi-Sparkle Look
+  fill("#3A2523"); noStroke();
+  ellipse(-s/4 + dx, -s/20 + dy, s/7, s/7);
+  ellipse(s/4 + dx, -s/20 + dy, s/7, s/7);
   fill(255);
-  ellipse(-s/3.6 + dx, -s/16 + dy, s/22, s/22);
-  ellipse(s/3.6 + dx, -s/16 + dy, s/22, s/22);
+  ellipse(-s/3.6 + dx, -s/16 + dy, s/18, s/18);
+  ellipse(s/3.6 + dx, -s/16 + dy, s/18, s/18);
+  ellipse(-s/4.5 + dx, -s/26 + dy, s/35, s/35);
+  ellipse(s/4.5 + dx, -s/26 + dy, s/35, s/35);
   
-  // Soft blushing cheeks
-  fill("rgba(252, 229, 227, 0.85)");
-  ellipse(-s/3, s/10, s/4, s/8);
-  ellipse(s/3, s/10, s/4, s/8);
+  // Soft cheeks
+  fill("rgba(240, 166, 155, 0.5)");
+  ellipse(-s/3, s/10, s/4, s/9);
+  ellipse(s/3, s/10, s/4, s/9);
   
-  // Mouth configuration
+  // Mouth
   if (isOpen) {
-    fill("#6C504B"); stroke("#5C665E"); strokeWeight(3);
+    fill("#6C504B"); stroke("#4A2E2B"); strokeWeight(3);
     ellipse(0, s/10, s/4, s/5);
   } else {
-    noFill(); stroke("#5C665E"); strokeWeight(3);
+    noFill(); stroke("#4A2E2B"); strokeWeight(3);
     arc(-s/30, s/10, s/12, s/12, 0, PI);
     arc(s/30, s/10, s/12, s/12, 0, PI);
   }
+  
+  // Static Decorative Character Plate
+  drawFoodPlate(0, s/2.6, s * 0.9);
   pop();
 }
 
-// --- DELICIOUS & CUTE FOOD ENTITIES ---
+function drawFoodPlate(mx, my, pw) {
+  push();
+  translate(mx, my);
+  stroke("#4A2E2B"); strokeWeight(3); fill("#F5F0EA");
+  ellipse(0, 0, pw, pw * 0.28); // Outer plate edge rim
+  fill("#EBE4DC"); noStroke();
+  ellipse(0, 0, pw * 0.85, pw * 0.22); // Inner circle plate rim recess
+  pop();
+}
 
-function drawFood(x, y, type) {
+function drawFood(x, y, type, hasPlate) {
   push();
   translate(x, y);
-  stroke("#5C665E"); strokeWeight(3);
+  stroke("#4A2E2B"); strokeWeight(3.5);
   
   if (type === "pancake") {
-    // Aesthetic ceramic plate base
-    fill("#FBFBFA"); ellipse(0, 15, 82, 24);
+    if(hasPlate) drawFoodPlate(0, 15, 95);
     
-    // Golden pancakes stack loop
-    fill("#F6D57F");
-    for(let i=0; i<3; i++) ellipse(0, i*4, 66, 20);
+    // Smooth stack pancakes layers
+    stroke("#4A2E2B"); fill("#F6D57F");
+    for(let i=0; i<3; i++) ellipse(0, i*4.5, 76, 24);
     
-    // Rich syrup splash overlay
-    fill("#E4985E"); noStroke(); ellipse(0, -4, 44, 12);
+    // Rich illustration syrup puddle profile
+    fill("#E4985E"); noStroke(); 
+    ellipse(0, -3, 54, 15);
+    // Drips hanging off profile edge
+    stroke("#4A2E2B"); fill("#E4985E"); strokeWeight(3);
+    rect(-20, -3, 8, 12, 4);
+    rect(12, -3, 6, 10, 3);
     
-    // Melting creamy butter pad
-    fill("#FFF199"); stroke("#5C665E"); strokeWeight(2.5); 
-    rect(-8, -15, 16, 10, 3);
+    // Butter cuboid pad
+    fill("#FFF199"); stroke("#4A2E2B"); strokeWeight(3); 
+    rect(-10, -16, 20, 12, 3);
   } else {
-    // Elegant sundae clear glass vessel
-    fill("rgba(255, 255, 255, 0.5)"); rect(-18, -38, 36, 68, 6);
+    if(hasPlate) drawFoodPlate(0, 15, 95);
     
-    // Premium pastel pink strawberry wash core
-    noStroke(); fill("#FBC3C3"); rect(-15, -34, 30, 58, 4);
+    // Glass structure container
+    fill("rgba(255, 255, 255, 0.45)"); rect(-20, -38, 40, 68, 8);
     
-    // Soft whipping fluff peaks
-    fill("#FFFDF9"); stroke("#5C665E"); strokeWeight(2.5);
-    ellipse(0, -38, 38, 18);
-    ellipse(0, -46, 24, 14);
+    // Strawberry core wash fill
+    noStroke(); fill("#FBC3C3"); rect(-17, -34, 34, 58, 5);
     
-    // Tiny topper glossy cherry
-    fill("#E27D73"); noStroke(); ellipse(0, -52, 12, 12);
+    // Swirled dense whipped cream froth profiles
+    fill("#FFFDF9"); stroke("#4A2E2B"); strokeWeight(3);
+    ellipse(0, -38, 42, 18);
+    ellipse(0, -47, 26, 14);
     
-    // Straw
-    stroke("#E27D73"); strokeWeight(3.5); line(6, -38, 14, -58);
+    // Vibrant cherry garnish
+    fill("#E27D73"); stroke("#4A2E2B"); strokeWeight(2.5);
+    ellipse(-2, -54, 14, 14);
+    noFill(); stroke("#4A2E2B"); strokeWeight(2);
+    arc(4, -62, 12, 10, PI, TWO_PI - HALF_PI); // Cherry stalk stem
+    
+    // Straw line profile
+    stroke("#E27D73"); strokeWeight(4); line(10, -38, 18, -58);
   }
   pop();
 }
 
-// --- INTERACTIVE ENGINE LOGIC ---
+// --- ENGINE SYSTEM LOGIC LAYER ---
 
 function touchStarted() {
   if (gameState !== "PLAY") return false;
@@ -402,18 +446,18 @@ function touchEnded() {
   isDragging = false;
 
   if (itemX < width * 0.35) {
-    if (currentItem === "pancake") { updateScore(); bunnySize += 30; spawnItem(); }
+    if (currentItem === "pancake") { updateScore(); bunnySize += 25; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
   else if (itemX > width * 0.65) {
-    if (currentItem === "milkshake") { updateScore(); kittySize += 30; spawnItem(); }
+    if (currentItem === "milkshake") { updateScore(); kittySize += 25; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
     itemX = width / 2; itemY = startY; 
   }
 
-  if (bunnySize > 420 || kittySize > 420) triggerPop(bunnySize > 420 ? "Bunny" : "Kitty");
+  if (bunnySize > 400 || kittySize > 400) triggerPop(bunnySize > 400 ? "Bunny" : "Kitty");
   return false;
 }
 
@@ -428,15 +472,16 @@ function spawnItem() {
 
 function updateScore() {
   score++;
-  scoreDisplay.innerText = score;
+  scoreDisplay.innerText = "SCORE: " + score;
   
-  // Trigger DOM CSS keyframe response link safely
   scoreBox.classList.add('bump');
   setTimeout(() => scoreBox.classList.remove('bump'), 120);
 }
 
 function triggerPop(who) {
   gameState = "POP";
+  isDragging = false;
+  
   let col = (who === "Bunny") ? "#F6D57F" : "#FBC3C3";
   let px = (who === "Bunny") ? width * 0.22 : width * 0.78;
   
@@ -456,9 +501,9 @@ function displayExplosion() {
 
 function resetGame() {
   score = 0;
-  scoreDisplay.innerText = score;
-  bunnySize = 130;
-  kittySize = 130;
+  scoreDisplay.innerText = "SCORE: 0";
+  bunnySize = 120;
+  kittySize = 120;
   particles = [];
   gameoverScreen.classList.remove('active');
   gameState = "PLAY"; 
@@ -467,7 +512,7 @@ function resetGame() {
 
 function windowResized() { 
   resizeCanvas(windowWidth, windowHeight); 
-  startY = height * 0.65; 
+  startY = height * 0.68; 
   
   if (!isDragging) {
     itemX = width / 2;
@@ -482,7 +527,7 @@ class Particle {
     this.gravity = 0.55; this.size = random(10, 32);
   }
   update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
-  display() { fill(this.col); stroke("#5C665E"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
+  display() { fill(this.col); stroke("#4A2E2B"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
 }
 </script>
 </body>
