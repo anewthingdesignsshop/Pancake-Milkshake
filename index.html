@@ -188,7 +188,6 @@ let kittySize = 135;
 let gameState = "PLAY"; 
 let particles = [];
 
-// Dynamic position coordinates tracking for accurate drop zoning
 let bunnyX, kittyX;
 
 let scoreDisplay, scoreBox, gameoverScreen, finalScoreText, restartButton;
@@ -234,9 +233,9 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  // Proximity tracking replaces arbitrary screen splits
-  let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < 180);
-  let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < 180);
+  // Proximity triggers dynamically adapt to character scale sizes
+  let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < (bunnySize * 1.2));
+  let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < (kittySize * 1.2));
 
   // Characters
   drawChibiBunny(bunnyX, startY, bunnySize, bunnyHungry);
@@ -294,10 +293,10 @@ function drawChibiBunny(x, y, s, isOpen) {
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
     fill("#6C504B");
-    ellipse(0, s*0.08, s*0.12, s*0.12);
+    ellipse(0, s*0.10, s*0.12, s*0.12);
   } else {
-    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
-    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(-s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
   }
   
   drawFoodPlate(0, s*0.25, s * 0.95);
@@ -447,20 +446,22 @@ function touchEnded() {
   if (!isDragging) return false;
   isDragging = false;
 
-  // Precise coordinate distance checking prevents rotation drops
   let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
   let distanceToKitty = dist(itemX, itemY, kittyX, startY);
 
-  if (distanceToBunny < 130) {
+  // Dynamic boundaries scale out proportionally as characters grow
+  let bunnyTargetRadius = bunnySize * 1.1;
+  let kittyTargetRadius = kittySize * 1.1;
+
+  if (distanceToBunny < bunnyTargetRadius) {
     if (currentItem === "pancake") { updateScore(); bunnySize += 25; spawnItem(); }
     else { triggerPop("Bunny"); }
   } 
-  else if (distanceToKitty < 130) {
+  else if (distanceToKitty < kittyTargetRadius) {
     if (currentItem === "milkshake") { updateScore(); kittySize += 25; spawnItem(); }
     else { triggerPop("Kitty"); }
   } 
   else { 
-    // Snaps cleanly back to center if let go outside feeding radius
     itemX = width / 2; itemY = startY; 
   }
 
@@ -509,8 +510,8 @@ function displayExplosion() {
 function resetGame() {
   score = 0;
   scoreDisplay.innerText = "SCORE: 0";
-  bunnySize = 120;
-  kittySize = 120;
+  bunnySize = 135;
+  kittySize = 135;
   particles = [];
   gameoverScreen.classList.remove('active');
   gameState = "PLAY"; 
