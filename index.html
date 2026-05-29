@@ -233,7 +233,6 @@ function displayGame() {
     itemY = mouseY;
   }
 
-  // Proximity triggers dynamically adapt to character scale sizes
   let bunnyHungry = (isDragging && dist(itemX, itemY, bunnyX, startY) < (bunnySize * 1.2));
   let kittyHungry = (isDragging && dist(itemX, itemY, kittyX, startY) < (kittySize * 1.2));
 
@@ -449,7 +448,6 @@ function touchEnded() {
   let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
   let distanceToKitty = dist(itemX, itemY, kittyX, startY);
 
-  // Dynamic boundaries scale out proportionally as characters grow
   let bunnyTargetRadius = bunnySize * 1.1;
   let kittyTargetRadius = kittySize * 1.1;
 
@@ -478,12 +476,20 @@ function spawnItem() {
   currentItem = random(["pancake", "milkshake"]);
 }
 
+// Fixed function explicitly re-binds UI elements on update
 function updateScore() {
   score++;
-  scoreDisplay.innerText = "SCORE: " + score;
   
-  scoreBox.classList.add('bump');
-  setTimeout(() => scoreBox.classList.remove('bump'), 120);
+  // Re-fetch DOM node to prevent rotation separation
+  scoreDisplay = document.getElementById('score-display');
+  if (scoreDisplay) {
+    scoreDisplay.innerText = "SCORE: " + score;
+  }
+  
+  if (scoreBox) {
+    scoreBox.classList.add('bump');
+    setTimeout(() => scoreBox.classList.remove('bump'), 120);
+  }
 }
 
 function triggerPop(who) {
@@ -509,7 +515,10 @@ function displayExplosion() {
 
 function resetGame() {
   score = 0;
-  scoreDisplay.innerText = "SCORE: 0";
+  scoreDisplay = document.getElementById('score-display');
+  if (scoreDisplay) {
+    scoreDisplay.innerText = "SCORE: 0";
+  }
   bunnySize = 135;
   kittySize = 135;
   particles = [];
@@ -522,7 +531,10 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight); 
   updateLayout();
   
-  scoreDisplay.innerText = "SCORE: " + score;
+  scoreDisplay = document.getElementById('score-display');
+  if (scoreDisplay) {
+    scoreDisplay.innerText = "SCORE: " + score;
+  }
   
   if (!isDragging) {
     itemX = width / 2;
