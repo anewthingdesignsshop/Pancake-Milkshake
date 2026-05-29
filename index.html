@@ -34,7 +34,7 @@
             width: 100vw;
         }
 
-        /* Floating Score Header Layout */
+        /* HUD Header */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -86,7 +86,7 @@
             letter-spacing: 1px;
         }
 
-        /* End Game Overlays */
+        /* Overlays */
         .overlay {
             position: absolute;
             top: 0;
@@ -191,8 +191,8 @@ let score = 0;
 let itemX, itemY, startY;
 let currentItem = "";
 let isDragging = false;
-let bunnySize = 130;
-let kittySize = 130;
+let bunnySize = 135;
+let kittySize = 135;
 let gameState = "PLAY"; 
 let particles = [];
 
@@ -240,11 +240,11 @@ function displayGame() {
   drawChibiBunny(width * 0.22, startY, bunnySize, bunnyHungry);
   drawChibiKitty(width * 0.78, startY, kittySize, kittyHungry);
 
-  // Central Food Item
+  // Active Sorting Food Object
   drawFood(itemX, itemY, currentItem, true);
 }
 
-// --- CURVED CHIBI FORM RENDERING ENGINE ---
+// --- ORGANIC CURVE VECTOR RECONSTRUCTION ---
 
 function drawChibiBunny(x, y, s, isOpen) {
   push();
@@ -253,59 +253,58 @@ function drawChibiBunny(x, y, s, isOpen) {
   
   stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
   
-  // Tall, upright rounded ears
-  ellipse(-s*0.22, -s*0.55, s*0.16, s*0.55);
-  ellipse(s*0.22, -s*0.55, s*0.16, s*0.55);
+  // High-set tall rounded ears
+  ellipse(-s*0.22, -s*0.52, s*0.16, s*0.58);
+  ellipse(s*0.22, -s*0.52, s*0.16, s*0.58);
   
-  // Ear inners
   fill("#FCD2D1"); noStroke();
-  ellipse(-s*0.22, -s*0.55, s*0.08, s*0.45);
-  ellipse(s*0.22, -s*0.55, s*0.08, s*0.45);
+  ellipse(-s*0.22, -s*0.52, s*0.08, s*0.48);
+  ellipse(s*0.22, -s*0.52, s*0.08, s*0.48);
   
-  // Organic Plump Chibi Face Shape (Bezier curves fix the flatness)
+  // Plump, round organic head (Removes flat top and square cheeks)
   stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   beginShape();
-  vertex(-s*0.45, -s*0.05);
-  bezierVertex(-s*0.5, -s*0.3, s*0.5, -s*0.3, s*0.45, -s*0.05); // Top forehead
-  bezierVertex(s*0.52, s*0.18, s*0.3, s*0.3, 0, s*0.3); // Right chubby cheek
-  bezierVertex(-s*0.3, s*0.3, -s*0.52, s*0.18, -s*0.45, -s*0.05); // Left chubby cheek
+  vertex(0, -s*0.25);
+  bezierVertex(s*0.32, -s*0.25, s*0.46, -s*0.08, s*0.46, s*0.06);   // Top Right to Upper Cheek
+  bezierVertex(s*0.46, s*0.24, s*0.26, s*0.32, 0, s*0.32);         // Lower Chubby Right Cheek Base
+  bezierVertex(-s*0.26, s*0.32, -s*0.46, s*0.24, -s*0.46, s*0.06); // Lower Chubby Left Cheek Base
+  bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   // Left Cheek to Top Center
   endShape(CLOSE);
   
-  // Tiny paws resting over the plate
+  // Tiny paws
   ellipse(-s*0.08, s*0.18, s*0.07, s*0.09);
   ellipse(s*0.08, s*0.18, s*0.07, s*0.09);
 
   let dx = map(itemX, 0, width, -s/24, s/24);
   let dy = map(itemY, 0, height, -s/32, s/32);
   
-  // Large shiny eyes
+  // Big round sparkle eyes
   fill("#3A2523"); noStroke();
-  ellipse(-s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
-  ellipse(s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
+  ellipse(-s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
+  ellipse(s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
   
-  // Eye Catchlights
   fill(255);
-  ellipse(-s*0.24 + dx, -s*0.01 + dy, s*0.045, s*0.045); 
-  ellipse(s*0.20 + dx, -s*0.01 + dy, s*0.045, s*0.045);
-  ellipse(-s*0.18 + dx, s*0.04 + dy, s*0.02, s*0.02); 
-  ellipse(s*0.26 + dx, s*0.04 + dy, s*0.02, s*0.02);
+  ellipse(-s*0.22 + dx, s*0.01 + dy, s*0.045, s*0.045); 
+  ellipse(s*0.18 + dx, s*0.01 + dy, s*0.045, s*0.045);
+  ellipse(-s*0.16 + dx, s*0.06 + dy, s*0.02, s*0.02); 
+  ellipse(s*0.24 + dx, s*0.06 + dy, s*0.02, s*0.02);
   
-  // Rosy blush
+  // Rosy cheeks
   fill("rgba(242, 172, 162, 0.55)");
-  ellipse(-s*0.32, s*0.09, s*0.16, s*0.08);
-  ellipse(s*0.32, s*0.09, s*0.16, s*0.08);
+  ellipse(-s*0.32, s*0.11, s*0.16, s*0.08);
+  ellipse(s*0.32, s*0.11, s*0.16, s*0.08);
   
-  // Mouth
+  // Smile Mouth
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
   if (isOpen) {
     fill("#6C504B");
-    ellipse(0, s*0.08, s*0.12, s*0.12);
+    ellipse(0, s*0.10, s*0.12, s*0.12);
   } else {
-    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
-    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(-s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
   }
   
-  // Serving Plate
+  // Foreground Empty Dish
   drawFoodPlate(0, s*0.25, s * 0.95);
   pop();
 }
@@ -315,7 +314,7 @@ function drawChibiKitty(x, y, s, isOpen) {
   if (s > 300) translate(random(-1.5, 1.5), random(-1.5, 1.5));
   translate(x, y);
   
-  stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
+  stroke("#4A2E2B"); strokeWeight(4.5); strokeJoin(ROUND); fill("#FFFDF9");
   
   // Curved Tail
   beginShape();
@@ -324,38 +323,38 @@ function drawChibiKitty(x, y, s, isOpen) {
   bezierVertex(s*0.48, -s*0.15, s*0.45, s*0.05, s*0.35, s*0.2);
   endShape(CLOSE);
   
-  // Calico Head Patches
+  // Calico Ears Structure
   fill("#D08D5B"); stroke("#4A2E2B");
-  rect(-s*0.42, -s*0.32, s*0.2, s*0.26, s*0.06);
+  rect(-s*0.42, -s*0.36, s*0.2, s*0.26, s*0.06);
   fill("#FFFDF9");
-  rect(s*0.22, -s*0.32, s*0.2, s*0.26, s*0.06);
+  rect(s*0.22, -s*0.36, s*0.2, s*0.26, s*0.06);
   
-  // Ear Inners
   fill("#FCD2D1"); noStroke();
-  ellipse(-s*0.32, -s*0.18, s*0.1, s*0.16);
-  ellipse(s*0.32, -s*0.18, s*0.1, s*0.16);
+  ellipse(-s*0.32, -s*0.22, s*0.1, s*0.16);
+  ellipse(s*0.32, -s*0.22, s*0.1, s*0.16);
   
-  // Plump Face Shape Matching the Bunny's Proportions
+  // Plump, round organic head (Identical curve matching to the bunny)
   stroke("#4A2E2B"); strokeWeight(4.5); fill("#FFFDF9");
   beginShape();
-  vertex(-s*0.45, -s*0.05);
-  bezierVertex(-s*0.5, -s*0.3, s*0.5, -s*0.3, s*0.45, -s*0.05);
-  bezierVertex(s*0.52, s*0.18, s*0.3, s*0.3, 0, s*0.3);
-  bezierVertex(-s*0.3, s*0.3, -s*0.52, s*0.18, -s*0.45, -s*0.05);
+  vertex(0, -s*0.25);
+  bezierVertex(s*0.32, -s*0.25, s*0.46, -s*0.08, s*0.46, s*0.06); 
+  bezierVertex(s*0.46, s*0.24, s*0.26, s*0.32, 0, s*0.32);         
+  bezierVertex(-s*0.26, s*0.32, -s*0.46, s*0.24, -s*0.46, s*0.06); 
+  bezierVertex(-s*0.46, -s*0.08, -s*0.32, -s*0.25, 0, -s*0.25);   
   endShape(CLOSE);
   
-  // Ginger markings on the cheeks
+  // Ginger calico side markings
   fill("#EAA86E"); noStroke();
   beginShape();
   vertex(-s*0.44, -s*0.05);
-  bezierVertex(-s*0.38, -s*0.02, -s*0.32, s*0.08, -s*0.34, s*0.15);
-  bezierVertex(-s*0.42, s*0.18, -s*0.48, s*0.1, -s*0.44, -s*0.05);
+  bezierVertex(-s*0.36, -s*0.02, -s*0.28, s*0.08, -s*0.30, s*0.16);
+  bezierVertex(-s*0.38, s*0.20, -s*0.46, s*0.12, -s*0.44, -s*0.05);
   endShape(CLOSE);
   
   beginShape();
   vertex(s*0.44, -s*0.05);
-  bezierVertex(s*0.38, -s*0.02, s*0.32, s*0.08, s*0.34, s*0.15);
-  bezierVertex(s*0.42, s*0.18, s*0.48, s*0.1, s*0.44, -s*0.05);
+  bezierVertex(s*0.36, -s*0.02, s*0.28, s*0.08, s*0.30, s*0.16);
+  bezierVertex(s*0.38, s*0.20, s*0.46, s*0.12, s*0.44, -s*0.05);
   endShape(CLOSE);
 
   let dx = map(itemX, 0, width, -s/22, s/22);
@@ -363,27 +362,26 @@ function drawChibiKitty(x, y, s, isOpen) {
   
   // Large shiny eyes
   fill("#3A2523"); noStroke();
-  ellipse(-s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
-  ellipse(s*0.22 + dx, s*0.02 + dy, s*0.14, s*0.14);
+  ellipse(-s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
+  ellipse(s*0.20 + dx, s*0.04 + dy, s*0.13, s*0.13);
   
-  // Catchlights
   fill(255);
-  ellipse(-s*0.24 + dx, -s*0.01 + dy, s*0.045, s*0.045); 
-  ellipse(s*0.20 + dx, -s*0.01 + dy, s*0.045, s*0.045);
-  ellipse(-s*0.18 + dx, s*0.04 + dy, s*0.02, s*0.02); 
-  ellipse(s*0.26 + dx, s*0.04 + dy, s*0.02, s*0.02);
+  ellipse(-s*0.22 + dx, s*0.01 + dy, s*0.045, s*0.045); 
+  ellipse(s*0.18 + dx, s*0.01 + dy, s*0.045, s*0.045);
+  ellipse(-s*0.16 + dx, s*0.06 + dy, s*0.02, s*0.02); 
+  ellipse(s*0.24 + dx, s*0.06 + dy, s*0.02, s*0.02);
   
-  // Whiskers
+  // Whisker strands
   stroke("#4A2E2B"); strokeWeight(3);
-  line(-s*0.44, s*0.05, -s*0.56, s*0.04);
-  line(-s*0.44, s*0.11, -s*0.58, s*0.13);
-  line(s*0.44, s*0.05, s*0.56, s*0.04);
-  line(s*0.44, s*0.11, s*0.58, s*0.13);
+  line(-s*0.44, s*0.06, -s*0.56, s*0.05);
+  line(-s*0.44, s*0.12, -s*0.58, s*0.14);
+  line(s*0.44, s*0.06, s*0.56, s*0.05);
+  line(s*0.44, s*0.12, s*0.58, s*0.14);
   
   // Blush
   fill("rgba(242, 172, 162, 0.55)"); noStroke();
-  ellipse(-s*0.32, s*0.09, s*0.16, s*0.08);
-  ellipse(s*0.32, s*0.09, s*0.16, s*0.08);
+  ellipse(-s*0.32, s*0.11, s*0.16, s*0.08);
+  ellipse(s*0.32, s*0.11, s*0.16, s*0.08);
   
   // Mouth
   stroke("#4A2E2B"); strokeWeight(3.5); noFill();
@@ -391,11 +389,11 @@ function drawChibiKitty(x, y, s, isOpen) {
     fill("#6C504B");
     ellipse(0, s*0.08, s*0.12, s*0.12);
   } else {
-    arc(-s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
-    arc(s*0.03, s*0.06, s*0.06, s*0.06, 0, PI);
+    arc(-s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
+    arc(s*0.03, s*0.08, s*0.06, s*0.06, 0, PI);
   }
   
-  // Serving Plate
+  // Foreground Empty Dish
   drawFoodPlate(0, s*0.25, s * 0.95);
   pop();
 }
@@ -451,7 +449,7 @@ function drawFood(x, y, type, hasPlate) {
   pop();
 }
 
-// --- INTERACTIVE ENGINE LOGIC LAYER ---
+// --- ENGINE SYSTEM LOGIC LAYER ---
 
 function touchStarted() {
   if (gameState !== "PLAY") return false;
@@ -520,8 +518,8 @@ function displayExplosion() {
 function resetGame() {
   score = 0;
   scoreDisplay.innerText = "SCORE: 0";
-  bunnySize = 120;
-  kittySize = 120;
+  bunnySize = 135;
+  kittySize = 135;
   particles = [];
   gameoverScreen.classList.remove('active');
   gameState = "PLAY"; 
