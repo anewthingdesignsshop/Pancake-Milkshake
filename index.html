@@ -198,7 +198,7 @@ let bunnyX, kittyX;
 let scoreTextNode, scoreBoxNode, gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+canvas = createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
     updateLayout();
   
@@ -447,36 +447,61 @@ function drawFood(x, y, type, hasPlate) {
 }
 
 // --- INTERACTIVE ENGINE LOGIC LAYER ---
-
+function getCanvasPoint(x, y) {
+  let rect = canvas.elt.getBoundingClientRect();
+  return {
+    x: (x - rect.left) * (width / rect.width),
+    y: (y - rect.top) * (height / rect.height)
+  };
+}
 function touchStarted() {
   if (gameState !== "PLAY") return false;
-  if (dist(mouseX, mouseY, itemX, itemY) < 100) isDragging = true;
+
+  let p = getCanvasPoint(mouseX, mouseY);
+
+  if (dist(p.x, p.y, itemX, itemY) < 100) {
+    isDragging = true;
+  }
+
   return false;
 }
 
 function touchEnded() {
   if (!isDragging) return false;
+
   isDragging = false;
 
-  let distanceToBunny = dist(itemX, itemY, bunnyX, startY);
-  let distanceToKitty = dist(itemX, itemY, kittyX, startY);
+  let p = getCanvasPoint(itemX, itemY);
+
+  let distanceToBunny = dist(p.x, p.y, bunnyX, startY);
+  let distanceToKitty = dist(p.x, p.y, kittyX, startY);
 
   let bunnyTargetRadius = bunnySize * 0.75;
   let kittyTargetRadius = kittySize * 0.75;
 
   if (distanceToBunny < bunnyTargetRadius) {
-    if (currentItem === "pancake") { updateScoreDOM(); bunnySize += 8; spawnItem(); }
-    else { triggerPop("Bunny"); }
+    if (currentItem === "pancake") {
+      updateScoreDOM();
+      bunnySize += 8;
+      spawnItem();
+    } else {
+      triggerPop("Bunny");
+    }
   } 
   else if (distanceToKitty < kittyTargetRadius) {
-    if (currentItem === "milkshake") { updateScoreDOM(); kittySize += 8; spawnItem(); }
-    else { triggerPop("Kitty"); }
+    if (currentItem === "milkshake") {
+      updateScoreDOM();
+      kittySize += 8;
+      spawnItem();
+    } else {
+      triggerPop("Kitty");
+    }
   } 
-  else { 
-    itemX = width / 2; itemY = startY; 
+  else {
+    itemX = width / 2;
+    itemY = startY;
   }
 
-  if (bunnySize > 300 || kittySize > 300) triggerPop(bunnySize > 300 ? "Bunny" : "Kitty");
   return false;
 }
 
