@@ -199,7 +199,8 @@ let scoreTextNode, scoreBoxNode, gameoverScreen, finalScoreText, restartButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  updateLayout();
+  pixelDensity(1);
+    updateLayout();
   
   // Connect native layout markers
   scoreTextNode = document.getElementById('score-display-text');
@@ -216,11 +217,7 @@ function setup() {
   
   spawnItem();
 }
-window.addEventListener('orientationchange', () => {
-  setTimeout(() => {
-    windowResized();
-  }, 250);
-});
+
 function updateLayout() {
   startY = height * 0.70;
   if (width > height) {
@@ -543,28 +540,13 @@ function resetGame() {
   spawnItem();
 }
 
-function windowResized() {
-  const currentScore = score;
-  const currentGameState = gameState;
-  const currentItemType = currentItem;
-
-  resizeCanvas(windowWidth, windowHeight);
+function windowResized() { 
+  resizeCanvas(windowWidth, windowHeight); 
   updateLayout();
-
-  // reset drag state after rotation
-  isDragging = false;
-
-  // recenter current food item
-  itemX = width / 2;
-  itemY = startY;
-
-  // restore only essential game state
-  score = currentScore;
-  gameState = currentGameState;
-  currentItem = currentItemType;
-
-  if (scoreTextNode) {
-    scoreTextNode.innerText = "SCORE: " + score;
+  
+  if (!isDragging) {
+    itemX = width / 2;
+    itemY = startY;
   }
 }
 
@@ -577,6 +559,32 @@ class Particle {
   update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
   display() { fill(this.col); stroke("#4A2E2B"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
 }
+function safeResizeFix() {
+  // Force p5 to fully sync canvas + touch system
+  resizeCanvas(windowWidth, windowHeight);
+  updateLayout();
+
+  // Kill any stuck drag state (THIS is key on iOS)
+  isDragging = false;
+
+  // Re-anchor item so hit detection doesn't break
+  itemX = width / 2;
+  itemY = startY;
+}
+
+window.addEventListener('orientationchange', () => {
+  // iOS fires multiple resize events → debounce fix
+  setTimeout(() => {
+    safeResizeFix();
+  }, 150);
+});
+
+// Extra safety: handles Safari “address bar collapse/expand”
+window.addEventListener('resize', () => {
+  requestAnimationFrame(() => {
+    safeResizeFix();
+  });
+});
 </script>
 </body>
 </html>
