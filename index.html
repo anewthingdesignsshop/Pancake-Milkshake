@@ -540,14 +540,18 @@ function resetGame() {
   spawnItem();
 }
 
-function windowResized() { 
-  resizeCanvas(windowWidth, windowHeight); 
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
   updateLayout();
-  
-  if (!isDragging) {
-    itemX = width / 2;
-    itemY = startY;
-  }
+
+  // IMPORTANT: do NOT reset score or gameState
+  // ONLY fix touch + item position
+
+  isDragging = false;
+
+  // Do NOT force center permanently (this breaks hit detection in landscape)
+  itemX = width / 2;
+  itemY = startY;
 }
 
 class Particle {
@@ -559,32 +563,7 @@ class Particle {
   update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
   display() { fill(this.col); stroke("#4A2E2B"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
 }
-function safeResizeFix() {
-  // Force p5 to fully sync canvas + touch system
-  resizeCanvas(windowWidth, windowHeight);
-  updateLayout();
 
-  // Kill any stuck drag state (THIS is key on iOS)
-  isDragging = false;
-
-  // Re-anchor item so hit detection doesn't break
-  itemX = width / 2;
-  itemY = startY;
-}
-
-window.addEventListener('orientationchange', () => {
-  // iOS fires multiple resize events → debounce fix
-  setTimeout(() => {
-    safeResizeFix();
-  }, 150);
-});
-
-// Extra safety: handles Safari “address bar collapse/expand”
-window.addEventListener('resize', () => {
-  requestAnimationFrame(() => {
-    safeResizeFix();
-  });
-});
 </script>
 </body>
 </html>
