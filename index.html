@@ -219,7 +219,8 @@ function setup() {
 }
 
 function updateLayout() {
-  startY = height * 0.70;
+  isDragging = false; // prevents stuck touch state on rotation
+startY = height * 0.70;
   if (width > height) {
     bunnyX = width * 0.25;
     kittyX = width * 0.75;
