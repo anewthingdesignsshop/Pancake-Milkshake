@@ -216,7 +216,11 @@ function setup() {
   
   spawnItem();
 }
-
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    windowResized();
+  }, 250);
+});
 function updateLayout() {
   startY = height * 0.70;
   if (width > height) {
@@ -539,13 +543,28 @@ function resetGame() {
   spawnItem();
 }
 
-function windowResized() { 
-  resizeCanvas(windowWidth, windowHeight); 
+function windowResized() {
+  const currentScore = score;
+  const currentGameState = gameState;
+  const currentItemType = currentItem;
+
+  resizeCanvas(windowWidth, windowHeight);
   updateLayout();
-  
-  if (!isDragging) {
-    itemX = width / 2;
-    itemY = startY;
+
+  // reset drag state after rotation
+  isDragging = false;
+
+  // recenter current food item
+  itemX = width / 2;
+  itemY = startY;
+
+  // restore only essential game state
+  score = currentScore;
+  gameState = currentGameState;
+  currentItem = currentItemType;
+
+  if (scoreTextNode) {
+    scoreTextNode.innerText = "SCORE: " + score;
   }
 }
 
