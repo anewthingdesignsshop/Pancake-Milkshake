@@ -196,7 +196,9 @@ let bunnyX, kittyX;
 
 // DOM Selectors
 let scoreTextNode, scoreBoxNode, gameoverScreen, finalScoreText, restartButton;
-
+function getPointer() {
+  return createVector(mouseX, mouseY);
+}
 function setup() {
 canvas = createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
@@ -457,7 +459,7 @@ function getCanvasPoint(x, y) {
 function touchStarted() {
   if (gameState !== "PLAY") return false;
 
-  let p = getCanvasPoint(mouseX, mouseY);
+  let p = getPointer();
 
   if (dist(p.x, p.y, itemX, itemY) < 100) {
     isDragging = true;
@@ -471,7 +473,7 @@ function touchEnded() {
 
   isDragging = false;
 
-  let p = getCanvasPoint(itemX, itemY);
+  let p = getPointer();
 
   let distanceToBunny = dist(p.x, p.y, bunnyX, startY);
   let distanceToKitty = dist(p.x, p.y, kittyX, startY);
@@ -570,12 +572,10 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   updateLayout();
 
-  // IMPORTANT: do NOT reset score or gameState
-  // ONLY fix touch + item position
-
+  // only reset drag state (DO NOT TOUCH SCORE OR GAME STATE)
   isDragging = false;
 
-  // Do NOT force center permanently (this breaks hit detection in landscape)
+  // re-center item safely
   itemX = width / 2;
   itemY = startY;
 }
@@ -589,7 +589,9 @@ class Particle {
   update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.size *= 0.95; }
   display() { fill(this.col); stroke("#4A2E2B"); strokeWeight(2.5); ellipse(this.x, this.y, this.size); }
 }
-
+document.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+}, { passive: false });
 </script>
 </body>
 </html>
